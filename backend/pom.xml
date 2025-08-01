@@ -45,6 +45,26 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        
+        <!-- H2 Database for Testing -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Environment Variables Support -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        
+        <!-- Flyway Migration Tool -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
 
         <!-- Development Tools -->
         <dependency>

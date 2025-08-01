@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: pms-postgres
+    environment:
+      POSTGRES_DB: pms_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pms-network
+
+  # Spring Boot Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pms-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/pms_db
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=postgres
+      - PORT=8080
+      - CORS_ORIGINS=http://localhost:3000
+      - LOG_LEVEL=INFO
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - pms-network
+    restart: unless-stopped
+
+  # React Frontend (Optional - for full stack)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pms-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080/api
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - pms-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  pms-network:
+    driver: bridge 

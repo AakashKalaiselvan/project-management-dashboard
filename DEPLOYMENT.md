@@ -8,6 +8,52 @@ This guide provides step-by-step instructions for deploying the Project Manageme
 2. **Render Account**: Sign up at [render.com](https://render.com/)
 3. **Database**: You'll need a PostgreSQL database (Render provides this)
 
+## Docker Configuration
+
+### Backend Dockerfile
+The backend uses a multi-stage Docker build for optimal image size:
+
+```dockerfile
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+# Copy pom.xml first for better layer caching
+COPY pom.xml .
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+# Download dependencies
+RUN mvn dependency:go-offline -B
+
+# Copy source code
+COPY src src
+
+# Build the application
+RUN mvn clean package -DskipTests
+
+# Expose port
+EXPOSE 8080
+
+# Run the application with proper port binding for Render
+CMD ["sh", "-c", "java -jar target/project-management-system-1.0.0.jar --server.port=${PORT:-8080}"]
+```
+
+### Docker Compose (Local Development)
+For local development with Docker Compose:
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
 ## Step 1: Set Up PostgreSQL Database on Render
 
 ### 1.1 Create PostgreSQL Database

@@ -218,3 +218,51 @@ I am going to push the application codes to github. So analyse the application a
 - Build outputs and temporary files
 - OS-generated files
 - Log files and backups
+
+## Database Migration Tool Integration
+
+**User Prompt:**
+```
+
+Integrate Flyway with the following requirements:
+
+1. Add necessary Flyway dependency in Maven.
+2. Configure Flyway to run migrations on app startup.
+3. Use standard Flyway directory structure (`db/migration`) inside `resources`.
+4. Ensure PostgreSQL-specific SQL syntax is used.
+5. Set Flyway to fail if a migration fails or is missing.
+
+Also, explain how to write and apply future migration files (e.g., `V2__add_task_deadline.sql`), and how to check migration history.
+```
+
+**Output Delivered:**
+- **Flyway Integration Complete:** Successfully integrated Flyway with all requirements
+- **Maven Configuration:** Added Flyway dependency to `pom.xml`
+- **Application Properties:** Configured Flyway settings in `application.properties` with fail-on-error settings
+- **Migration Structure:** Created standard `db/migration` directory structure in resources
+- **Initial Migration:** Converted existing schema to `V1__initial_schema.sql` with proper Flyway naming
+- **Sample Future Migration:** Created `V2__add_task_deadline.sql` as example for future migrations
+- **Comprehensive Documentation:** Created `FLYWAY_GUIDE.md` with complete usage instructions
+
+**Files Created/Modified:**
+- `backend/pom.xml` - Added Flyway dependency
+- `backend/src/main/resources/application.properties` - Added Flyway configuration
+- `backend/src/main/resources/db/migration/V1__initial_schema.sql` - Initial migration
+- `backend/src/main/resources/db/migration/V2__add_task_deadline.sql` - Sample future migration
+- `backend/FLYWAY_GUIDE.md` - Comprehensive Flyway usage guide
+- `README.md` - Updated to include Flyway information
+
+**Key Features Implemented:**
+1. **Automatic Migration Execution** - Migrations run on application startup
+2. **Version Control** - Sequential version numbering with descriptive names
+3. **PostgreSQL Support** - Proper PostgreSQL syntax and features
+4. **Error Handling** - Fail-fast configuration for migration issues
+5. **Documentation** - Complete guide for creating and managing migrations
+6. **Team Collaboration** - Clear processes for team migration management
+
+**Migration Management:**
+- **Naming Convention:** `V{version}__{description}.sql`
+- **Version Control:** Sequential numbering (1, 2, 3, etc.)
+- **History Tracking:** Via `flyway_schema_history` table
+- **Team Coordination:** Version control integration and review processes
+- **Testing:** Development-first approach with rollback considerations

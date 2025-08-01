@@ -26,6 +26,7 @@ A full-stack project management application with React frontend, Spring Boot bac
 
 ### Database
 - PostgreSQL
+- Flyway for database migrations
 
 ## Project Structure
 
@@ -70,7 +71,8 @@ project-management-system/
 
 ### Database Setup
 1. Create PostgreSQL database: `pms_db`
-2. Run the schema script in `database/schema.sql`
+2. Start the Spring Boot application - Flyway will automatically run migrations
+3. For manual setup, see `backend/FLYWAY_GUIDE.md`
 
 ## API Endpoints
 

@@ -88,18 +88,6 @@ out/
 .vscode/
 
 # ===========================================
-# SPRING BOOT SPECIFIC
-# ===========================================
-
-# Spring Boot
-application-local.properties
-application-local.yml
-application-dev.properties
-application-dev.yml
-application-test.properties
-application-test.yml
-
-# ===========================================
 # ENVIRONMENT VARIABLES
 # ===========================================
 
@@ -109,6 +97,8 @@ application-test.yml
 .env.development
 .env.test
 .env.production
+*.env
+env/*.env
 
 # ===========================================
 # LOGS AND TEMPORARY FILES

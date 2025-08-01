@@ -85,7 +85,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -183,16 +182,6 @@ backups/
 # Database dumps
 *.dump
 *.sql
-
-# ===========================================
-# DOCKER SPECIFIC
-# ===========================================
-
-# Docker
-.dockerignore
-Dockerfile
-docker-compose.yml
-docker-compose.override.yml
 
 # ===========================================
 # DEPLOYMENT SPECIFIC
