@@ -2,10 +2,8 @@ package com.pms.service;
 
 import com.pms.dto.TaskDto;
 import com.pms.entity.Project;
-import com.pms.entity.ProjectMember;
 import com.pms.entity.Task;
 import com.pms.entity.User;
-import com.pms.repository.ProjectMemberRepository;
 import com.pms.repository.ProjectRepository;
 import com.pms.repository.TaskRepository;
 import com.pms.repository.UserRepository;
@@ -24,15 +22,12 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final ProjectMemberRepository projectMemberRepository;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, 
-                      UserRepository userRepository, ProjectMemberRepository projectMemberRepository) {
+    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
-        this.projectMemberRepository = projectMemberRepository;
     }
 
     /**
@@ -107,13 +102,19 @@ public class TaskService {
     /**
      * Update task status with permission checks
      */
-    public Optional<TaskDto> updateTaskStatus(Long id, TaskDto.Status status, User currentUser) {
+    public Optional<TaskDto> updateTaskStatus(Long id, String statusString, User currentUser) {
         Optional<Task> existingTask = taskRepository.findById(id);
         if (existingTask.isPresent() && canModifyTask(existingTask.get(), currentUser)) {
-            Task task = existingTask.get();
-            task.setStatus(Task.Status.valueOf(status.name()));
-            Task savedTask = taskRepository.save(task);
-            return Optional.of(convertToDto(savedTask, currentUser));
+            try {
+                TaskDto.Status status = TaskDto.Status.valueOf(statusString.toUpperCase());
+                Task task = existingTask.get();
+                task.setStatus(Task.Status.valueOf(status.name()));
+                Task savedTask = taskRepository.save(task);
+                return Optional.of(convertToDto(savedTask, currentUser));
+            } catch (IllegalArgumentException e) {
+                // Invalid status value
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }
@@ -216,7 +217,7 @@ public class TaskService {
     }
 
     /**
-     * Determine the assignee for a task based on logic and permissions
+     * Determine the assignee for a task based on business rules
      */
     private User determineAssignee(TaskDto taskDto, User currentUser, Project project) {
         // If assignee is specified in DTO, validate and use it
@@ -227,13 +228,8 @@ public class TaskService {
             }
         }
         
-        // Default to current user if they are a project member
-        if (isProjectMember(project.getId(), currentUser.getId())) {
-            return currentUser;
-        }
-        
-        // If current user is not a member, don't assign anyone
-        return null;
+        // Default to current user
+        return currentUser;
     }
 
     /**
@@ -281,29 +277,18 @@ public class TaskService {
         if (currentUser.getRole() == User.Role.ADMIN) {
             return true;
         }
-        return project.getCreator().equals(currentUser);
+        return project.getCreator().equals(currentUser) || project.getVisibility() == Project.Visibility.PUBLIC;
     }
 
     /**
-     * Check if user can assign task to specific user (must be project member)
+     * Check if user can assign task to specific user
      */
     private boolean canAssignToUser(Project project, User currentUser, User assignee) {
         if (currentUser.getRole() == User.Role.ADMIN) {
-            return isProjectMember(project.getId(), assignee.getId());
+            return true;
         }
-        // Can assign to self if they are a project member
-        if (assignee.equals(currentUser)) {
-            return isProjectMember(project.getId(), currentUser.getId());
-        }
-        // Can assign to other project members if user is project creator
-        return project.getCreator().equals(currentUser) && isProjectMember(project.getId(), assignee.getId());
-    }
-
-    /**
-     * Check if user is a member of the project
-     */
-    private boolean isProjectMember(Long projectId, Long userId) {
-        return projectMemberRepository.existsByProjectIdAndUserId(projectId, userId);
+        // Can assign to self or if project is public
+        return assignee.equals(currentUser) || project.getVisibility() == Project.Visibility.PUBLIC;
     }
 
     // Conversion methods

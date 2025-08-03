@@ -179,9 +179,11 @@ out/
 *.sql.zip
 backups/
 
-# Database dumps
+# Database dumps (but allow migration files)
 *.dump
+# Exclude SQL files except migration files
 *.sql
+!**/src/main/resources/db/migration/*.sql
 
 # ===========================================
 # DEPLOYMENT SPECIFIC

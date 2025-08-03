@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Project, Task, Status } from '../types';
+import { Project, Task, Status, Milestone } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
@@ -190,6 +190,63 @@ export const taskApi = {
 
   getHighPriority: async (): Promise<Task[]> => {
     const response = await api.get('/tasks/high-priority');
+    return response.data;
+  },
+};
+
+// Milestone API calls
+export const milestoneApi = {
+  // Get all milestones for a project
+  getByProjectId: async (projectId: number) => {
+    const response = await api.get(`/projects/${projectId}/milestones`);
+    return response.data;
+  },
+
+  // Get milestone by ID
+  getById: async (id: number) => {
+    const response = await api.get(`/milestones/${id}`);
+    return response.data;
+  },
+
+  // Create milestone
+  create: async (projectId: number, milestone: Partial<Milestone>) => {
+    const response = await api.post(`/projects/${projectId}/milestones`, milestone);
+    return response.data;
+  },
+
+  // Update milestone
+  update: async (id: number, milestone: Partial<Milestone>) => {
+    const response = await api.put(`/milestones/${id}`, milestone);
+    return response.data;
+  },
+
+  // Delete milestone
+  delete: async (id: number) => {
+    const response = await api.delete(`/milestones/${id}`);
+    return response.data;
+  },
+
+  // Toggle milestone completion
+  toggleCompletion: async (id: number) => {
+    const response = await api.patch(`/milestones/${id}/toggle`);
+    return response.data;
+  },
+
+  // Get overdue milestones
+  getOverdue: async (projectId: number) => {
+    const response = await api.get(`/projects/${projectId}/milestones/overdue`);
+    return response.data;
+  },
+
+  // Get upcoming milestones
+  getUpcoming: async (projectId: number) => {
+    const response = await api.get(`/projects/${projectId}/milestones/upcoming`);
+    return response.data;
+  },
+
+  // Get milestone progress
+  getProgress: async (projectId: number) => {
+    const response = await api.get(`/projects/${projectId}/milestones/progress`);
     return response.data;
   },
 };

@@ -107,4 +107,4 @@ public class ProjectMember {
                 ", joinedAt=" + joinedAt +
                 '}';
     }
-} 
+}

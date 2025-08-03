@@ -68,4 +68,15 @@ export interface AuthResponse {
   name: string;
   role: string;
   message?: string;
+}
+
+export interface Milestone {
+  id: number;
+  title: string;
+  description?: string;
+  targetDate: string;
+  completed: boolean;
+  projectId: number;
+  createdAt: string;
+  updatedAt: string;
 } 

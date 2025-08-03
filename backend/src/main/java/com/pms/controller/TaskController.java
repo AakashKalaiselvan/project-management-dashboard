@@ -1,6 +1,7 @@
 package com.pms.controller;
 
 import com.pms.dto.TaskDto;
+import com.pms.dto.StatusUpdateRequest;
 import com.pms.entity.User;
 import com.pms.service.TaskService;
 import jakarta.validation.Valid;
@@ -74,9 +75,9 @@ public class TaskController {
      */
     @PutMapping("/{id}/status")
     public ResponseEntity<TaskDto> updateTaskStatus(@PathVariable Long id, 
-                                                  @RequestBody TaskDto.Status status) {
+                                                  @RequestBody StatusUpdateRequest request) {
         User currentUser = getCurrentUser();
-        return taskService.updateTaskStatus(id, status, currentUser)
+        return taskService.updateTaskStatus(id, request.getStatus(), currentUser)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

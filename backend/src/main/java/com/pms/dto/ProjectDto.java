@@ -24,6 +24,15 @@ public class ProjectDto {
     private String creatorName;
     private String visibility;
     private List<TaskDto> tasks;
+
+    public Double getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Double progress) {
+        this.progress = progress;
+    }
+
     private Double progress;
 
     // Constructors
@@ -124,14 +133,6 @@ public class ProjectDto {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
-    }
-
-    public Double getProgress() {
-        return progress;
-    }
-
-    public void setProgress(Double progress) {
-        this.progress = progress;
     }
 
     @Override

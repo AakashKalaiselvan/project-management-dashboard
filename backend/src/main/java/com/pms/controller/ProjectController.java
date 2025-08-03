@@ -63,8 +63,8 @@ public class ProjectController {
      * Update an existing project with permission checks
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectDto> updateProject(@PathVariable Long id, 
-                                                  @Valid @RequestBody ProjectDto projectDto) {
+    public ResponseEntity<ProjectDto> updateProject(@PathVariable Long id,
+                                                    @Valid @RequestBody ProjectDto projectDto) {
         User currentUser = getCurrentUser();
         return projectService.updateProject(id, projectDto, currentUser)
                 .map(ResponseEntity::ok)
@@ -119,8 +119,8 @@ public class ProjectController {
      * Add member to project
      */
     @PostMapping("/{id}/members")
-    public ResponseEntity<Void> addProjectMember(@PathVariable Long id, 
-                                               @Valid @RequestBody AddMemberRequest request) {
+    public ResponseEntity<Void> addProjectMember(@PathVariable Long id,
+                                                 @Valid @RequestBody AddMemberRequest request) {
         User currentUser = getCurrentUser();
         boolean added = projectService.addProjectMember(id, request.getUserId(), request.getRole(), currentUser);
         if (added) {
@@ -133,8 +133,8 @@ public class ProjectController {
      * Remove member from project
      */
     @DeleteMapping("/{id}/members/{userId}")
-    public ResponseEntity<Void> removeProjectMember(@PathVariable Long id, 
-                                                  @PathVariable Long userId) {
+    public ResponseEntity<Void> removeProjectMember(@PathVariable Long id,
+                                                    @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         boolean removed = projectService.removeProjectMember(id, userId, currentUser);
         if (removed) {
@@ -153,4 +153,4 @@ public class ProjectController {
         }
         throw new RuntimeException("User not authenticated");
     }
-} 
+}

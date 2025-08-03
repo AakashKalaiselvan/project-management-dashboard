@@ -323,3 +323,119 @@ body {
     grid-template-columns: 1fr;
   }
 } 
+
+/* Milestone Styles */
+.milestone-form {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.milestone-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.milestone-form .form-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.milestone-form .form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.milestone-form .form-control.error {
+  border-color: #dc3545;
+}
+
+.milestone-form .form-checkbox {
+  margin-right: 0.5rem;
+}
+
+.milestone-form .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.milestone-list .card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.milestone-list .card-header {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.milestone-list .card-body {
+  padding: 1rem;
+}
+
+.milestone-list .text-decoration-line-through {
+  text-decoration: line-through;
+}
+
+.milestone-list .form-checkbox {
+  margin-right: 0.5rem;
+}
+
+/* Tab Styles */
+.btn-outline-primary {
+  color: #007bff;
+  border-color: #007bff;
+  background: transparent;
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-outline-primary.active {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+/* Progress Bar Styles */
+.progress {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Grid Layout */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Utility Classes */
+.text-danger {
+  color: #dc3545;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+} 

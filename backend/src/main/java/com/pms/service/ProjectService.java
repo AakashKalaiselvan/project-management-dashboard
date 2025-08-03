@@ -29,8 +29,8 @@ public class ProjectService {
     private final UserRepository userRepository;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, TaskRepository taskRepository, 
-                        ProjectMemberRepository projectMemberRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, TaskRepository taskRepository,
+                          ProjectMemberRepository projectMemberRepository, UserRepository userRepository) {
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
         this.projectMemberRepository = projectMemberRepository;
@@ -44,7 +44,7 @@ public class ProjectService {
      */
     public List<ProjectDto> getAllProjects(User currentUser) {
         List<Project> projects;
-        
+
         if (currentUser.getRole() == User.Role.ADMIN) {
             // Admin can see all projects
             projects = projectRepository.findAllWithTasks();
@@ -52,7 +52,7 @@ public class ProjectService {
             // Regular users can see their own projects + public projects
             projects = projectRepository.findByCreatorOrVisibility(currentUser, Project.Visibility.PUBLIC);
         }
-        
+
         return projects.stream()
                 .map(project -> convertToDto(project, currentUser))
                 .collect(Collectors.toList());
@@ -76,11 +76,11 @@ public class ProjectService {
         Project project = convertToEntity(projectDto);
         project.setCreator(currentUser);
         Project savedProject = projectRepository.save(project);
-        
+
         // Automatically add creator as project member with OWNER role
         ProjectMember creatorMember = new ProjectMember(savedProject, currentUser, ProjectMember.Role.OWNER);
         projectMemberRepository.save(creatorMember);
-        
+
         return Optional.of(convertToDto(savedProject, currentUser));
     }
 
@@ -91,18 +91,18 @@ public class ProjectService {
         Optional<Project> existingProject = projectRepository.findById(id);
         if (existingProject.isPresent()) {
             Project project = existingProject.get();
-            
+
             // Check if user can update this project
             if (!canModifyProject(project, currentUser)) {
                 return Optional.empty();
             }
-            
+
             project.setName(projectDto.getName());
             project.setDescription(projectDto.getDescription());
             project.setStartDate(projectDto.getStartDate());
             project.setEndDate(projectDto.getEndDate());
             project.setVisibility(Project.Visibility.valueOf(projectDto.getVisibility()));
-            
+
             Project savedProject = projectRepository.save(project);
             return Optional.of(convertToDto(savedProject, currentUser));
         }
@@ -128,7 +128,7 @@ public class ProjectService {
         Optional<Project> project = projectRepository.findById(projectId);
         if (project.isPresent() && canAccessProject(project.get(), currentUser)) {
             ProjectDto dto = convertToDto(project.get(), currentUser);
-            
+
             long totalTasks = taskRepository.countByProjectId(projectId);
             if (totalTasks == 0) {
                 dto.setProgress(0.0);
@@ -137,7 +137,7 @@ public class ProjectService {
                 double progress = (double) completedTasks / totalTasks * 100;
                 dto.setProgress(progress);
             }
-            
+
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -148,14 +148,14 @@ public class ProjectService {
      */
     public List<ProjectDto> searchProjects(String name, User currentUser) {
         List<Project> projects;
-        
+
         if (currentUser.getRole() == User.Role.ADMIN) {
             projects = projectRepository.findByNameContainingIgnoreCase(name);
         } else {
             projects = projectRepository.findByNameContainingIgnoreCaseAndCreatorOrNameContainingIgnoreCaseAndVisibility(
                     name, currentUser, Project.Visibility.PUBLIC);
         }
-        
+
         return projects.stream()
                 .map(project -> convertToDto(project, currentUser))
                 .collect(Collectors.toList());
@@ -181,13 +181,13 @@ public class ProjectService {
     public boolean addProjectMember(Long projectId, Long userId, String role, User currentUser) {
         Optional<Project> project = projectRepository.findById(projectId);
         Optional<User> user = userRepository.findById(userId);
-        
+
         if (project.isPresent() && user.isPresent() && canManageProject(project.get(), currentUser)) {
             // Check if user is already a member
             if (projectMemberRepository.existsByProjectIdAndUserId(projectId, userId)) {
                 return false;
             }
-            
+
             ProjectMember.Role memberRole = ProjectMember.Role.valueOf(role.toUpperCase());
             ProjectMember member = new ProjectMember(project.get(), user.get(), memberRole);
             projectMemberRepository.save(member);
@@ -201,13 +201,13 @@ public class ProjectService {
      */
     public boolean removeProjectMember(Long projectId, Long userId, User currentUser) {
         Optional<Project> project = projectRepository.findById(projectId);
-        
+
         if (project.isPresent() && canManageProject(project.get(), currentUser)) {
             // Don't allow removing the project creator
             if (project.get().getCreator().getId().equals(userId)) {
                 return false;
             }
-            
+
             Optional<ProjectMember> member = projectMemberRepository.findByProjectIdAndUserId(projectId, userId);
             if (member.isPresent()) {
                 projectMemberRepository.delete(member.get());
@@ -257,22 +257,22 @@ public class ProjectService {
         dto.setEndDate(project.getEndDate());
         dto.setCreatedAt(project.getCreatedAt());
         dto.setUpdatedAt(project.getUpdatedAt());
-        
+
         // Set creator information
         if (project.getCreator() != null) {
             dto.setCreatorId(project.getCreator().getId());
             dto.setCreatorName(project.getCreator().getName());
         }
-        
+
         // Set visibility
         dto.setVisibility(project.getVisibility().name());
-        
+
         // Convert tasks to DTOs
         List<TaskDto> taskDtos = project.getTasks().stream()
                 .map(task -> convertTaskToDto(task, currentUser))
                 .collect(Collectors.toList());
         dto.setTasks(taskDtos);
-        
+
         return dto;
     }
 
@@ -299,17 +299,17 @@ public class ProjectService {
         dto.setDueDate(task.getDueDate());
         dto.setCreatedAt(task.getCreatedAt());
         dto.setUpdatedAt(task.getUpdatedAt());
-        
+
         // Set assignee information
         if (task.getAssignedTo() != null) {
             dto.setAssignedToId(task.getAssignedTo().getId());
             dto.setAssignedToName(task.getAssignedTo().getName());
         }
-        
+
         return dto;
     }
 
     private UserDto convertToUserDto(User user) {
         return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole().name());
     }
-} 
+}
