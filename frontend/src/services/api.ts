@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Project, Task, Status, Milestone } from '../types';
+import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
@@ -247,6 +247,45 @@ export const milestoneApi = {
   // Get milestone progress
   getProgress: async (projectId: number) => {
     const response = await api.get(`/projects/${projectId}/milestones/progress`);
+    return response.data;
+  },
+};
+
+// Time Entry API calls
+export const timeEntryApi = {
+  // Log hours for a task
+  create: async (taskId: number, hoursSpent: number): Promise<TimeEntry> => {
+    const response = await api.post(`/tasks/${taskId}/time-entries`, { hoursSpent });
+    return response.data;
+  },
+
+  // Get all time entries for a task
+  getByTaskId: async (taskId: number): Promise<TimeEntry[]> => {
+    const response = await api.get(`/tasks/${taskId}/time-entries`);
+    return response.data;
+  },
+
+  // Get time summary for a task
+  getTimeSummary: async (taskId: number): Promise<TimeSummary> => {
+    const response = await api.get(`/tasks/${taskId}/time-summary`);
+    return response.data;
+  },
+
+  // Get all time entries by current user
+  getByCurrentUser: async (): Promise<TimeEntry[]> => {
+    const response = await api.get('/users/me/time-entries');
+    return response.data;
+  },
+
+  // Get time entries for a task by current user
+  getByTaskIdAndCurrentUser: async (taskId: number): Promise<TimeEntry[]> => {
+    const response = await api.get(`/tasks/${taskId}/time-entries/me`);
+    return response.data;
+  },
+
+  // Get total hours by current user
+  getTotalHoursByCurrentUser: async (): Promise<{ userId: number; userName: string; totalHours: number }> => {
+    const response = await api.get('/users/me/total-hours');
     return response.data;
   },
 };

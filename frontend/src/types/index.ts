@@ -79,4 +79,20 @@ export interface Milestone {
   projectId: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TimeEntry {
+  id: number;
+  taskId: number;
+  userId: number;
+  taskTitle: string;
+  userName: string;
+  hoursSpent: number;
+  createdAt: string;
+}
+
+export interface TimeSummary {
+  taskId: number;
+  totalHours: number;
+  userHours: number;
 } 

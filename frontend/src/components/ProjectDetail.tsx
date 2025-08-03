@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projectApi, taskApi, userApi, milestoneApi } from '../services/api';
-import { Project, Task, Status, Priority, User, Milestone } from '../types';
+import { projectApi, taskApi, userApi, milestoneApi, timeEntryApi } from '../services/api';
+import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary } from '../types';
 import TaskForm from './TaskForm';
 import MilestoneForm from './MilestoneForm';
 import MilestoneList from './MilestoneList';
+import TimeEntryForm from './TimeEntryForm';
+import TimeEntryList from './TimeEntryList';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProjectDetail: React.FC = () => {
@@ -22,6 +24,12 @@ const ProjectDetail: React.FC = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'tasks' | 'milestones' | 'members'>('tasks');
+  
+  // Time tracking state
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [timeSummary, setTimeSummary] = useState<TimeSummary | null>(null);
+  const [showTimeEntryForm, setShowTimeEntryForm] = useState(false);
+  const [selectedTaskForTimeEntry, setSelectedTaskForTimeEntry] = useState<Task | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -160,14 +168,44 @@ const ProjectDetail: React.FC = () => {
   const handleRemoveMember = async (userId: number) => {
     if (!project?.id) return;
     
-    if (window.confirm('Are you sure you want to remove this member from the project?')) {
-      try {
-        await projectApi.removeProjectMember(project.id, userId);
-        loadProjectData(project.id);
-      } catch (error) {
-        console.error('Error removing member:', error);
-      }
+    try {
+      await projectApi.removeProjectMember(project.id, userId);
+      loadProjectData(project.id);
+    } catch (error) {
+      console.error('Error removing member:', error);
     }
+  };
+
+  // Time tracking functions
+  const loadTimeData = async (taskId: number) => {
+    try {
+      const [entries, summary] = await Promise.all([
+        timeEntryApi.getByTaskIdAndCurrentUser(taskId),
+        timeEntryApi.getTimeSummary(taskId)
+      ]);
+      setTimeEntries(entries);
+      setTimeSummary(summary);
+    } catch (error) {
+      console.error('Error loading time data:', error);
+    }
+  };
+
+  const handleLogHours = (task: Task) => {
+    setSelectedTaskForTimeEntry(task);
+    setShowTimeEntryForm(true);
+  };
+
+  const handleTimeEntrySuccess = async () => {
+    if (selectedTaskForTimeEntry?.id) {
+      await loadTimeData(selectedTaskForTimeEntry.id);
+    }
+    setShowTimeEntryForm(false);
+    setSelectedTaskForTimeEntry(null);
+  };
+
+  const handleTimeEntryCancel = () => {
+    setShowTimeEntryForm(false);
+    setSelectedTaskForTimeEntry(null);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -417,6 +455,42 @@ const ProjectDetail: React.FC = () => {
                         </small>
                       </div>
                     )}
+
+                    {/* Time Tracking Section */}
+                    <div className="time-tracking-section">
+                      <div className="d-flex justify-between align-center mb-2">
+                        <small className="text-muted">
+                          <strong>Time Tracking:</strong>
+                        </small>
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleLogHours(task)}
+                        >
+                          Log Hours
+                        </button>
+                      </div>
+                      
+                      {/* Time Summary */}
+                      {timeSummary && timeSummary.taskId === task.id && (
+                        <div className="time-summary mb-2">
+                          <small className="text-muted">
+                            Total: {timeSummary.totalHours.toFixed(1)}h | 
+                            Your time: {timeSummary.userHours.toFixed(1)}h
+                          </small>
+                        </div>
+                      )}
+                      
+                      {/* Time Entries List */}
+                      {timeEntries.length > 0 && timeEntries[0].taskId === task.id && (
+                        <div className="time-entries-preview">
+                          <small className="text-muted">
+                            Recent entries: {timeEntries.slice(0, 3).map(entry => 
+                              `${entry.hoursSpent.toFixed(1)}h`
+                            ).join(', ')}
+                          </small>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -567,6 +641,20 @@ const ProjectDetail: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Time Entry Form Modal */}
+      {showTimeEntryForm && selectedTaskForTimeEntry?.id && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <TimeEntryForm
+              taskId={selectedTaskForTimeEntry.id}
+              taskTitle={selectedTaskForTimeEntry.title}
+              onSuccess={handleTimeEntrySuccess}
+              onCancel={handleTimeEntryCancel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
