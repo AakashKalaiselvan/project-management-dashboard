@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -19,6 +20,7 @@ const Header: React.FC = () => {
         </nav>
         {user && (
           <div className="user-info">
+            <NotificationBell />
             <span>Welcome, {user.name} ({user.role})</span>
             <button onClick={handleLogout} className="logout-btn">
               Logout

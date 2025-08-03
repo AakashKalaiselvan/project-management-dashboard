@@ -95,4 +95,25 @@ export interface TimeSummary {
   taskId: number;
   totalHours: number;
   userHours: number;
+}
+
+export interface Comment {
+  id: number;
+  taskId: number;
+  userId: number;
+  taskTitle: string;
+  userName: string;
+  userEmail: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Notification {
+  id: number;
+  userId: number;
+  userName: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
 } 

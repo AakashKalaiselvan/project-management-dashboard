@@ -22,12 +22,14 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserRepository userRepository) {
+    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserRepository userRepository, NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -69,6 +71,12 @@ public class TaskService {
             task.setAssignedTo(assignee);
             
             Task savedTask = taskRepository.save(task);
+            
+            // Send notification if task is assigned to someone other than the creator
+            if (assignee != null && !assignee.equals(currentUser)) {
+                notificationService.notifyTaskAssignment(assignee, savedTask.getTitle(), project.get().getName());
+            }
+            
             return Optional.of(convertToDto(savedTask, currentUser));
         }
         return Optional.empty();

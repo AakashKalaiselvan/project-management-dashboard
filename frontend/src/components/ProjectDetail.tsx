@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projectApi, taskApi, userApi, milestoneApi, timeEntryApi } from '../services/api';
-import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary } from '../types';
+import { projectApi, taskApi, userApi, milestoneApi, timeEntryApi, commentApi } from '../services/api';
+import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary, Comment } from '../types';
 import TaskForm from './TaskForm';
 import MilestoneForm from './MilestoneForm';
 import MilestoneList from './MilestoneList';
 import TimeEntryForm from './TimeEntryForm';
 import TimeEntryList from './TimeEntryList';
+import CommentForm from './CommentForm';
+import CommentList from './CommentList';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProjectDetail: React.FC = () => {
@@ -30,6 +32,11 @@ const ProjectDetail: React.FC = () => {
   const [timeSummary, setTimeSummary] = useState<TimeSummary | null>(null);
   const [showTimeEntryForm, setShowTimeEntryForm] = useState(false);
   const [selectedTaskForTimeEntry, setSelectedTaskForTimeEntry] = useState<Task | null>(null);
+
+  // Comment state
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -206,6 +213,62 @@ const ProjectDetail: React.FC = () => {
   const handleTimeEntryCancel = () => {
     setShowTimeEntryForm(false);
     setSelectedTaskForTimeEntry(null);
+  };
+
+  // Comment functions
+  const loadComments = async (taskId: number) => {
+    try {
+      const commentsData = await commentApi.getByTaskId(taskId);
+      setComments(commentsData);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  const handleCreateComment = async (taskId: number, text: string) => {
+    try {
+      await commentApi.create(taskId, text);
+      setShowCommentForm(false);
+      loadComments(taskId);
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    }
+  };
+
+  const handleEditComment = (comment: Comment) => {
+    setEditingComment(comment);
+    setShowCommentForm(true);
+  };
+
+  const handleUpdateComment = async (commentId: number, text: string) => {
+    if (!editingComment) return;
+    
+    try {
+      await commentApi.update(commentId, text);
+      setShowCommentForm(false);
+      setEditingComment(null);
+      loadComments(editingComment.taskId);
+    } catch (error) {
+      console.error('Error updating comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await commentApi.delete(commentId);
+      // Reload comments for the current task
+      if (editingComment) {
+        loadComments(editingComment.taskId);
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleCommentUpdated = () => {
+    if (editingComment) {
+      loadComments(editingComment.taskId);
+    }
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -489,6 +552,46 @@ const ProjectDetail: React.FC = () => {
                             ).join(', ')}
                           </small>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Comments Section */}
+                    <div className="mt-3">
+                      <h5>Comments</h5>
+                      {canManageProject() && task.id && (
+                        <button 
+                          className="btn btn-sm btn-outline-primary mb-2"
+                          onClick={() => {
+                            setEditingComment(null); // Clear editing comment
+                            if (task.id) {
+                              loadComments(task.id);
+                            }
+                            setShowCommentForm(true);
+                          }}
+                        >
+                          Add Comment
+                        </button>
+                      )}
+                      <CommentList
+                        comments={comments}
+                        onCommentUpdated={handleCommentUpdated}
+                      />
+                      {showCommentForm && task.id && (
+                        <CommentForm
+                          taskId={task.id}
+                          taskTitle={task.title}
+                          onSuccess={() => {
+                            setShowCommentForm(false);
+                            setEditingComment(null);
+                            if (task.id) {
+                              loadComments(task.id);
+                            }
+                          }}
+                          onCancel={() => {
+                            setShowCommentForm(false);
+                            setEditingComment(null);
+                          }}
+                        />
                       )}
                     </div>
                   </div>

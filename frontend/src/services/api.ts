@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary } from '../types';
+import { Project, Task, Status, Priority, User, Milestone, TimeEntry, TimeSummary, Comment, Notification } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
@@ -286,6 +286,75 @@ export const timeEntryApi = {
   // Get total hours by current user
   getTotalHoursByCurrentUser: async (): Promise<{ userId: number; userName: string; totalHours: number }> => {
     const response = await api.get('/users/me/total-hours');
+    return response.data;
+  },
+};
+
+// Comment API calls
+export const commentApi = {
+  // Get all comments for a task
+  getByTaskId: async (taskId: number): Promise<Comment[]> => {
+    const response = await api.get(`/tasks/${taskId}/comments`);
+    return response.data;
+  },
+
+  // Create a comment for a task
+  create: async (taskId: number, text: string): Promise<Comment> => {
+    const response = await api.post(`/tasks/${taskId}/comments`, { text });
+    return response.data;
+  },
+
+  // Update a comment
+  update: async (commentId: number, text: string): Promise<Comment> => {
+    const response = await api.put(`/comments/${commentId}`, { text });
+    return response.data;
+  },
+
+  // Delete a comment
+  delete: async (commentId: number): Promise<void> => {
+    await api.delete(`/comments/${commentId}`);
+  },
+
+  // Get comment by ID
+  getById: async (commentId: number): Promise<Comment> => {
+    const response = await api.get(`/comments/${commentId}`);
+    return response.data;
+  },
+
+  // Get all comments by current user
+  getByCurrentUser: async (): Promise<Comment[]> => {
+    const response = await api.get('/users/me/comments');
+    return response.data;
+  },
+};
+
+// Notification API calls
+export const notificationApi = {
+  // Get all notifications for current user
+  getAll: async (): Promise<Notification[]> => {
+    const response = await api.get('/notifications');
+    return response.data;
+  },
+
+  // Get unread notifications for current user
+  getUnread: async (): Promise<Notification[]> => {
+    const response = await api.get('/notifications/unread');
+    return response.data;
+  },
+
+  // Mark a notification as read
+  markAsRead: async (notificationId: number): Promise<void> => {
+    await api.put(`/notifications/${notificationId}/read`);
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async (): Promise<void> => {
+    await api.put('/notifications/read-all');
+  },
+
+  // Get unread notification count
+  getUnreadCount: async (): Promise<{ userId: number; userName: string; unreadCount: number }> => {
+    const response = await api.get('/notifications/unread-count');
     return response.data;
   },
 };
