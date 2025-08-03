@@ -10,6 +10,75 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request with token:', config.url);
+    } else {
+      console.log('Request without token:', config.url);
+    }
+    return config;
+  },
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => {
+    console.log('Response success:', response.config.url, response.status);
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.config?.url, error.response?.status, error.response?.data);
+    
+    if (error.response?.status === 401) {
+      // Token expired or invalid, redirect to login
+      console.log('Token expired, redirecting to login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    } else if (error.response?.status === 403) {
+      // Forbidden - might be token issue or permission issue
+      console.log('403 Forbidden - checking token validity');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('No token found, redirecting to login');
+        window.location.href = '/login';
+      } else {
+        console.log('Token exists but access forbidden - might be permission issue');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API calls
+export const authApi = {
+  login: async (email: string, password: string) => {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+  },
+
+  register: async (name: string, email: string, password: string) => {
+    const response = await api.post('/auth/register', { name, email, password });
+    return response.data;
+  },
+};
+
+// User API calls
+export const userApi = {
+  getAll: async () => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+};
+
 // Project API calls
 export const projectApi = {
   getAll: async (): Promise<Project[]> => {
@@ -45,6 +114,22 @@ export const projectApi = {
     const response = await api.get(`/projects/search?name=${encodeURIComponent(name)}`);
     return response.data;
   },
+
+  // Project Member Management
+  getProjectMembers: async (projectId: number) => {
+    const response = await api.get(`/projects/${projectId}/members`);
+    return response.data;
+  },
+
+  addProjectMember: async (projectId: number, userId: number) => {
+    const response = await api.post(`/projects/${projectId}/members`, { userId });
+    return response.data;
+  },
+
+  removeProjectMember: async (projectId: number, userId: number) => {
+    const response = await api.delete(`/projects/${projectId}/members/${userId}`);
+    return response.data;
+  },
 };
 
 // Task API calls
@@ -76,6 +161,11 @@ export const taskApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/tasks/${id}`);
+  },
+
+  getAssignedToMe: async (): Promise<Task[]> => {
+    const response = await api.get('/tasks/assigned-to-me');
+    return response.data;
   },
 
   getByStatus: async (projectId: number, status: string): Promise<Task[]> => {

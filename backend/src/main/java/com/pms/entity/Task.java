@@ -50,6 +50,10 @@ public class Task {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to_id")
+    private User assignedTo;
+
     // Enums
     public enum Priority {
         LOW, MEDIUM, HIGH
@@ -62,12 +66,13 @@ public class Task {
     // Constructors
     public Task() {}
 
-    public Task(String title, String description, Priority priority, Status status, LocalDate dueDate) {
+    public Task(String title, String description, Priority priority, Status status, LocalDate dueDate, User assignedTo) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.status = status;
         this.dueDate = dueDate;
+        this.assignedTo = assignedTo;
     }
 
     // Getters and Setters
@@ -143,6 +148,14 @@ public class Task {
         this.updatedAt = updatedAt;
     }
 
+    public User getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
@@ -152,6 +165,7 @@ public class Task {
                 ", priority=" + priority +
                 ", status=" + status +
                 ", dueDate=" + dueDate +
+                ", assignedTo=" + (assignedTo != null ? assignedTo.getName() : "Unassigned") +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

@@ -20,7 +20,11 @@ public class ProjectDto {
     private LocalDate endDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long creatorId;
+    private String creatorName;
+    private String visibility;
     private List<TaskDto> tasks;
+    private Double progress;
 
     // Constructors
     public ProjectDto() {}
@@ -98,6 +102,38 @@ public class ProjectDto {
         this.tasks = tasks;
     }
 
+    public Long getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(Long creatorId) {
+        this.creatorId = creatorId;
+    }
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
+    }
+
+    public String getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(String visibility) {
+        this.visibility = visibility;
+    }
+
+    public Double getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Double progress) {
+        this.progress = progress;
+    }
+
     @Override
     public String toString() {
         return "ProjectDto{" +
@@ -106,6 +142,9 @@ public class ProjectDto {
                 ", description='" + description + '\'' +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
+                ", creatorId=" + creatorId +
+                ", creatorName='" + creatorName + '\'' +
+                ", visibility='" + visibility + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

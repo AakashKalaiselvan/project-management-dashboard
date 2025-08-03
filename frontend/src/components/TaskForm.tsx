@@ -1,20 +1,42 @@
-import React, { useState } from 'react';
-import { Task, Priority, Status } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Task, Priority, Status, User } from '../types';
+import { projectApi } from '../services/api';
 
 interface TaskFormProps {
   task?: Task;
   onSubmit: (task: Task) => void;
   onCancel: () => void;
+  projectId: number;
+  currentUser?: User | null;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel, projectId, currentUser }) => {
   const [formData, setFormData] = useState<Task>({
     title: task?.title || '',
     description: task?.description || '',
     priority: task?.priority || Priority.MEDIUM,
     status: task?.status || Status.TODO,
     dueDate: task?.dueDate || '',
+    assignedToId: task?.assignedToId || undefined,
   });
+  const [projectMembers, setProjectMembers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadProjectMembers();
+  }, [projectId]);
+
+  const loadProjectMembers = async () => {
+    try {
+      setLoading(true);
+      const membersData = await projectApi.getProjectMembers(projectId);
+      setProjectMembers(membersData);
+    } catch (error) {
+      console.error('Error loading project members:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,15 +114,37 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Due Date</label>
-        <input
-          type="date"
-          name="dueDate"
-          className="form-control"
-          value={formData.dueDate}
-          onChange={handleChange}
-        />
+      <div className="grid grid-2">
+        <div className="form-group">
+          <label className="form-label">Due Date</label>
+          <input
+            type="date"
+            name="dueDate"
+            className="form-control"
+            value={formData.dueDate}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Assign To</label>
+          <select
+            name="assignedToId"
+            className="form-control"
+            value={formData.assignedToId || ''}
+            onChange={handleChange}
+          >
+            <option value="">{loading ? 'Loading members...' : 'Select project member (defaults to you)'}</option>
+            {projectMembers.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name} ({member.email})
+              </option>
+            ))}
+          </select>
+          <small className="text-muted">
+            Only project members can be assigned to tasks
+          </small>
+        </div>
       </div>
 
       <div className="d-flex gap-2 mt-3">

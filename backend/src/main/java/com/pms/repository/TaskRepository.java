@@ -1,6 +1,7 @@
 package com.pms.repository;
 
 import com.pms.entity.Task;
+import com.pms.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -52,4 +53,26 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
      * Find high priority tasks that are not completed
      */
     List<Task> findByPriorityAndStatusNotOrderByCreatedAtDesc(Task.Priority priority, Task.Status status);
+
+    /**
+     * Find tasks assigned to a specific user
+     */
+    List<Task> findByAssignedToOrderByDueDateAsc(User assignedTo);
+
+    /**
+     * Find overdue tasks assigned to a specific user
+     */
+    @Query("SELECT t FROM Task t WHERE t.assignedTo = :user AND t.dueDate < CURRENT_DATE AND t.status != 'COMPLETED' ORDER BY t.dueDate ASC")
+    List<Task> findOverdueTasksByUser(@Param("user") User user);
+
+    /**
+     * Find tasks due today assigned to a specific user
+     */
+    @Query("SELECT t FROM Task t WHERE t.assignedTo = :user AND t.dueDate = CURRENT_DATE ORDER BY t.priority DESC")
+    List<Task> findTasksDueTodayByUser(@Param("user") User user);
+
+    /**
+     * Find high priority tasks that are not completed and assigned to a specific user
+     */
+    List<Task> findByPriorityAndStatusNotAndAssignedToOrderByCreatedAtDesc(Task.Priority priority, Task.Status status, User assignedTo);
 } 

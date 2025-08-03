@@ -22,6 +22,8 @@ public class TaskDto {
     private LocalDate dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long assignedToId;
+    private String assignedToName;
 
     // Enums
     public enum Priority {
@@ -118,6 +120,22 @@ public class TaskDto {
         this.updatedAt = updatedAt;
     }
 
+    public Long getAssignedToId() {
+        return assignedToId;
+    }
+
+    public void setAssignedToId(Long assignedToId) {
+        this.assignedToId = assignedToId;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
+    }
+
     @Override
     public String toString() {
         return "TaskDto{" +
@@ -128,6 +146,8 @@ public class TaskDto {
                 ", priority=" + priority +
                 ", status=" + status +
                 ", dueDate=" + dueDate +
+                ", assignedToId=" + assignedToId +
+                ", assignedToName='" + assignedToName + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

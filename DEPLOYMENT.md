@@ -121,9 +121,9 @@ FRONTEND_URL=https://your-frontend-app.onrender.com
 2. Connect your GitHub repository
 3. Configure the service:
    - **Name**: `project-management-frontend`
-   - **Build Command**: `cd frontend && npm install && npm run build`
-   - **Publish Directory**: `frontend/build`
-   - **Root Directory**: `frontend` (if your frontend is in a subdirectory)
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `build`
+   - **Root Directory**: `frontend`
 
 ### 3.2 Configure Environment Variables
 Add this environment variable:
@@ -132,7 +132,25 @@ Add this environment variable:
 REACT_APP_API_URL=https://your-backend-app.onrender.com/api
 ```
 
-### 3.3 Deploy
+### 3.3 Troubleshooting Frontend Deployment
+If you encounter build issues:
+
+1. **Check Node.js version**: Add `NODE_VERSION=18` environment variable
+2. **Clear build cache**: In Render dashboard, go to your service → **Settings** → **Clear Build Cache**
+3. **Check build logs**: Look for specific error messages in the build output
+4. **Test locally**: Run `npm run build` locally to ensure it works
+5. **Fix vulnerabilities**: Run `npm audit fix` locally before deploying
+
+#### **"Could not find a required file. Name: index.html" Error**
+If you get this error:
+
+1. **Verify Root Directory**: Ensure "Root Directory" is set to `frontend` (not empty)
+2. **Check File Structure**: Ensure `frontend/public/index.html` exists in your repository
+3. **Alternative Build Command**: Try `cd frontend && npm install && npm run build`
+4. **Alternative Publish Directory**: Try `frontend/build` if the above doesn't work
+5. **Clear Cache**: Clear the build cache and redeploy
+
+### 3.4 Deploy
 1. Click **"Create Static Site"**
 2. Render will build and deploy your frontend
 3. Wait for the build to complete

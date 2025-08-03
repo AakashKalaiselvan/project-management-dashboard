@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projectApi, taskApi } from '../services/api';
-import { Project, Task, Status, Priority } from '../types';
+import { projectApi, taskApi, userApi } from '../services/api';
+import { Project, Task, Status, Priority, User } from '../types';
 import TaskForm from './TaskForm';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projectMembers, setProjectMembers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   useEffect(() => {
@@ -20,16 +25,27 @@ const ProjectDetail: React.FC = () => {
 
   const loadProjectData = async (projectId: number) => {
     try {
-      const [projectData, tasksData] = await Promise.all([
+      const [projectData, tasksData, membersData] = await Promise.all([
         projectApi.getById(projectId),
-        taskApi.getByProjectId(projectId)
+        taskApi.getByProjectId(projectId),
+        projectApi.getProjectMembers(projectId)
       ]);
       setProject(projectData);
       setTasks(tasksData);
+      setProjectMembers(membersData);
     } catch (error) {
       console.error('Error loading project data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAllUsers = async () => {
+    try {
+      const users = await userApi.getAll();
+      setAllUsers(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
     }
   };
 
@@ -69,6 +85,31 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
+  const handleAddMember = async (userId: number) => {
+    if (!project?.id) return;
+    
+    try {
+      await projectApi.addProjectMember(project.id, userId);
+      setShowAddMember(false);
+      loadProjectData(project.id);
+    } catch (error) {
+      console.error('Error adding member:', error);
+    }
+  };
+
+  const handleRemoveMember = async (userId: number) => {
+    if (!project?.id) return;
+    
+    if (window.confirm('Are you sure you want to remove this member from the project?')) {
+      try {
+        await projectApi.removeProjectMember(project.id, userId);
+        loadProjectData(project.id);
+      } catch (error) {
+        console.error('Error removing member:', error);
+      }
+    }
+  };
+
   const filteredTasks = tasks.filter(task => {
     if (filterStatus === 'all') return true;
     return task.status === filterStatus;
@@ -88,6 +129,19 @@ const ProjectDetail: React.FC = () => {
       case Priority.MEDIUM: return 'warning';
       default: return 'primary';
     }
+  };
+
+  // Check if current user can manage the project
+  const canManageProject = () => {
+    if (!user || !project) return false;
+    if (user.role === 'ADMIN') return true;
+    return project.creatorId === user.id;
+  };
+
+  // Check if user is project creator
+  const isProjectCreator = () => {
+    if (!user || !project) return false;
+    return project.creatorId === user.id;
   };
 
   if (loading) {
@@ -126,6 +180,15 @@ const ProjectDetail: React.FC = () => {
           <div>
             <strong>End Date:</strong> {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
           </div>
+          <div>
+            <strong>Visibility:</strong> 
+            <span className={`badge badge-${project.visibility === 'PUBLIC' ? 'success' : 'secondary'} ml-2`}>
+              {project.visibility}
+            </span>
+          </div>
+          <div>
+            <strong>Created by:</strong> {project.creatorName || 'Unknown'}
+          </div>
         </div>
         <div className="mt-3">
           <div className="d-flex justify-between align-center mb-1">
@@ -145,6 +208,101 @@ const ProjectDetail: React.FC = () => {
             {completedTasks} of {totalTasks} tasks completed
           </small>
         </div>
+      </div>
+
+      {/* Project Members */}
+      <div className="card mb-3">
+        <div className="card-header">
+          <h3 className="card-title">Project Members</h3>
+          {canManageProject() && (
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                setShowAddMember(true);
+                loadAllUsers();
+              }}
+            >
+              Add Member
+            </button>
+          )}
+        </div>
+        
+        {/* Add Member Form */}
+        {showAddMember && (
+          <div className="mb-3 p-3 border rounded">
+            <h4>Add Project Member</h4>
+            <div className="grid grid-2">
+              <div className="form-group">
+                <label className="form-label">Select User</label>
+                <select 
+                  className="form-control" 
+                  id="addMemberSelect"
+                  onChange={(e) => {
+                    const userId = parseInt(e.target.value);
+                    if (userId) {
+                      handleAddMember(userId);
+                    }
+                  }}
+                >
+                  <option value="">Choose a user...</option>
+                  {allUsers
+                    .filter(user => !projectMembers.some(member => member.id === user.id))
+                    .map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+              <div className="d-flex align-center">
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowAddMember(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Members List */}
+        <div className="grid grid-2">
+          {projectMembers.map((member) => (
+            <div key={member.id} className="card">
+              <div className="d-flex justify-between align-center">
+                <div>
+                  <h4>{member.name}</h4>
+                  <p className="text-muted mb-1">{member.email}</p>
+                  <div className="d-flex gap-2">
+                    {isProjectCreator() && member.id === project.creatorId && (
+                      <span className="badge badge-primary">Creator</span>
+                    )}
+                    {member.id === project.creatorId && (
+                      <span className="badge badge-success">Owner</span>
+                    )}
+                    <span className="badge badge-secondary">Member</span>
+                  </div>
+                </div>
+                {canManageProject() && member.id !== project.creatorId && (
+                  <button 
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleRemoveMember(member.id)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {projectMembers.length === 0 && (
+          <div className="text-center">
+            <p className="text-muted">No members added yet.</p>
+          </div>
+        )}
       </div>
 
       {/* Tasks Section */}
@@ -173,11 +331,13 @@ const ProjectDetail: React.FC = () => {
         </div>
 
         {/* Task Form */}
-        {showTaskForm && (
+        {showTaskForm && project.id && (
           <div className="mb-3">
             <TaskForm
               onSubmit={handleCreateTask}
               onCancel={() => setShowTaskForm(false)}
+              projectId={project.id}
+              currentUser={user}
             />
           </div>
         )}
@@ -223,6 +383,15 @@ const ProjectDetail: React.FC = () => {
                   </span>
                 )}
               </div>
+
+              {/* Assignment Information */}
+              {task.assignedToName && (
+                <div className="mb-2">
+                  <small className="text-muted">
+                    <strong>Assigned to:</strong> {task.assignedToName}
+                  </small>
+                </div>
+              )}
             </div>
           ))}
         </div>

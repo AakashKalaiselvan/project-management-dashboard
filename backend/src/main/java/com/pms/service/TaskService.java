@@ -2,9 +2,13 @@ package com.pms.service;
 
 import com.pms.dto.TaskDto;
 import com.pms.entity.Project;
+import com.pms.entity.ProjectMember;
 import com.pms.entity.Task;
+import com.pms.entity.User;
+import com.pms.repository.ProjectMemberRepository;
 import com.pms.repository.ProjectRepository;
 import com.pms.repository.TaskRepository;
+import com.pms.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,51 +23,68 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository) {
+    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, 
+                      UserRepository userRepository, ProjectMemberRepository projectMemberRepository) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+        this.projectMemberRepository = projectMemberRepository;
     }
 
     /**
-     * Get all tasks for a project
+     * Get all tasks for a project with access control
      */
-    public List<TaskDto> getTasksByProjectId(Long projectId) {
-        List<Task> tasks = taskRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
-        return tasks.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Get task by ID
-     */
-    public Optional<TaskDto> getTaskById(Long id) {
-        Optional<Task> task = taskRepository.findById(id);
-        return task.map(this::convertToDto);
-    }
-
-    /**
-     * Create a new task
-     */
-    public Optional<TaskDto> createTask(Long projectId, TaskDto taskDto) {
+    public List<TaskDto> getTasksByProjectId(Long projectId, User currentUser) {
         Optional<Project> project = projectRepository.findById(projectId);
-        if (project.isPresent()) {
-            Task task = convertToEntity(taskDto);
-            task.setProject(project.get());
-            Task savedTask = taskRepository.save(task);
-            return Optional.of(convertToDto(savedTask));
+        if (project.isPresent() && canAccessProject(project.get(), currentUser)) {
+            List<Task> tasks = taskRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
+            return tasks.stream()
+                    .map(task -> convertToDto(task, currentUser))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
+    /**
+     * Get task by ID with access control
+     */
+    public Optional<TaskDto> getTaskById(Long id, User currentUser) {
+        Optional<Task> task = taskRepository.findById(id);
+        if (task.isPresent() && canAccessTask(task.get(), currentUser)) {
+            return Optional.of(convertToDto(task.get(), currentUser));
         }
         return Optional.empty();
     }
 
     /**
-     * Update an existing task
+     * Create a new task with assignment logic
      */
-    public Optional<TaskDto> updateTask(Long id, TaskDto taskDto) {
+    public Optional<TaskDto> createTask(Long projectId, TaskDto taskDto, User currentUser) {
+        Optional<Project> project = projectRepository.findById(projectId);
+        if (project.isPresent() && canModifyProject(project.get(), currentUser)) {
+            Task task = convertToEntity(taskDto);
+            task.setProject(project.get());
+            
+            // Set assignee based on logic
+            User assignee = determineAssignee(taskDto, currentUser, project.get());
+            task.setAssignedTo(assignee);
+            
+            Task savedTask = taskRepository.save(task);
+            return Optional.of(convertToDto(savedTask, currentUser));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Update an existing task with permission checks
+     */
+    public Optional<TaskDto> updateTask(Long id, TaskDto taskDto, User currentUser) {
         Optional<Task> existingTask = taskRepository.findById(id);
-        if (existingTask.isPresent()) {
+        if (existingTask.isPresent() && canModifyTask(existingTask.get(), currentUser)) {
             Task task = existingTask.get();
             task.setTitle(taskDto.getTitle());
             task.setDescription(taskDto.getDescription());
@@ -71,31 +92,38 @@ public class TaskService {
             task.setStatus(Task.Status.valueOf(taskDto.getStatus().name()));
             task.setDueDate(taskDto.getDueDate());
             
+            // Update assignee if provided and user has permission
+            if (taskDto.getAssignedToId() != null && canAssignTask(task.getProject(), currentUser)) {
+                Optional<User> assignee = userRepository.findById(taskDto.getAssignedToId());
+                assignee.ifPresent(task::setAssignedTo);
+            }
+            
             Task savedTask = taskRepository.save(task);
-            return Optional.of(convertToDto(savedTask));
+            return Optional.of(convertToDto(savedTask, currentUser));
         }
         return Optional.empty();
     }
 
     /**
-     * Update task status
+     * Update task status with permission checks
      */
-    public Optional<TaskDto> updateTaskStatus(Long id, TaskDto.Status status) {
+    public Optional<TaskDto> updateTaskStatus(Long id, TaskDto.Status status, User currentUser) {
         Optional<Task> existingTask = taskRepository.findById(id);
-        if (existingTask.isPresent()) {
+        if (existingTask.isPresent() && canModifyTask(existingTask.get(), currentUser)) {
             Task task = existingTask.get();
             task.setStatus(Task.Status.valueOf(status.name()));
             Task savedTask = taskRepository.save(task);
-            return Optional.of(convertToDto(savedTask));
+            return Optional.of(convertToDto(savedTask, currentUser));
         }
         return Optional.empty();
     }
 
     /**
-     * Delete a task
+     * Delete a task with permission checks
      */
-    public boolean deleteTask(Long id) {
-        if (taskRepository.existsById(id)) {
+    public boolean deleteTask(Long id, User currentUser) {
+        Optional<Task> task = taskRepository.findById(id);
+        if (task.isPresent() && canModifyTask(task.get(), currentUser)) {
             taskRepository.deleteById(id);
             return true;
         }
@@ -103,58 +131,183 @@ public class TaskService {
     }
 
     /**
-     * Get tasks by status for a project
+     * Get tasks assigned to the current user
      */
-    public List<TaskDto> getTasksByStatus(Long projectId, Task.Status status) {
-        List<Task> tasks = taskRepository.findByProjectIdAndStatusOrderByPriorityDesc(projectId, status);
+    public List<TaskDto> getTasksAssignedToMe(User currentUser) {
+        List<Task> tasks = taskRepository.findByAssignedToOrderByDueDateAsc(currentUser);
         return tasks.stream()
-                .map(this::convertToDto)
+                .map(task -> convertToDto(task, currentUser))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get tasks by priority for a project
+     * Get tasks by status for a project with access control
      */
-    public List<TaskDto> getTasksByPriority(Long projectId, Task.Priority priority) {
-        List<Task> tasks = taskRepository.findByProjectIdAndPriorityOrderByCreatedAtDesc(projectId, priority);
+    public List<TaskDto> getTasksByStatus(Long projectId, Task.Status status, User currentUser) {
+        Optional<Project> project = projectRepository.findById(projectId);
+        if (project.isPresent() && canAccessProject(project.get(), currentUser)) {
+            List<Task> tasks = taskRepository.findByProjectIdAndStatusOrderByPriorityDesc(projectId, status);
+            return tasks.stream()
+                    .map(task -> convertToDto(task, currentUser))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
+    /**
+     * Get tasks by priority for a project with access control
+     */
+    public List<TaskDto> getTasksByPriority(Long projectId, Task.Priority priority, User currentUser) {
+        Optional<Project> project = projectRepository.findById(projectId);
+        if (project.isPresent() && canAccessProject(project.get(), currentUser)) {
+            List<Task> tasks = taskRepository.findByProjectIdAndPriorityOrderByCreatedAtDesc(projectId, priority);
+            return tasks.stream()
+                    .map(task -> convertToDto(task, currentUser))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
+    /**
+     * Get overdue tasks with access control
+     */
+    public List<TaskDto> getOverdueTasks(User currentUser) {
+        List<Task> tasks;
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            tasks = taskRepository.findOverdueTasks();
+        } else {
+            tasks = taskRepository.findOverdueTasksByUser(currentUser);
+        }
         return tasks.stream()
-                .map(this::convertToDto)
+                .map(task -> convertToDto(task, currentUser))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get overdue tasks
+     * Get tasks due today with access control
      */
-    public List<TaskDto> getOverdueTasks() {
-        List<Task> tasks = taskRepository.findOverdueTasks();
+    public List<TaskDto> getTasksDueToday(User currentUser) {
+        List<Task> tasks;
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            tasks = taskRepository.findTasksDueToday();
+        } else {
+            tasks = taskRepository.findTasksDueTodayByUser(currentUser);
+        }
         return tasks.stream()
-                .map(this::convertToDto)
+                .map(task -> convertToDto(task, currentUser))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get tasks due today
+     * Get high priority tasks that are not completed with access control
      */
-    public List<TaskDto> getTasksDueToday() {
-        List<Task> tasks = taskRepository.findTasksDueToday();
+    public List<TaskDto> getHighPriorityIncompleteTasks(User currentUser) {
+        List<Task> tasks;
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            tasks = taskRepository.findByPriorityAndStatusNotOrderByCreatedAtDesc(
+                    Task.Priority.HIGH, Task.Status.COMPLETED);
+        } else {
+            tasks = taskRepository.findByPriorityAndStatusNotAndAssignedToOrderByCreatedAtDesc(
+                    Task.Priority.HIGH, Task.Status.COMPLETED, currentUser);
+        }
         return tasks.stream()
-                .map(this::convertToDto)
+                .map(task -> convertToDto(task, currentUser))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get high priority tasks that are not completed
+     * Determine the assignee for a task based on logic and permissions
      */
-    public List<TaskDto> getHighPriorityIncompleteTasks() {
-        List<Task> tasks = taskRepository.findByPriorityAndStatusNotOrderByCreatedAtDesc(
-                Task.Priority.HIGH, Task.Status.COMPLETED);
-        return tasks.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    private User determineAssignee(TaskDto taskDto, User currentUser, Project project) {
+        // If assignee is specified in DTO, validate and use it
+        if (taskDto.getAssignedToId() != null) {
+            Optional<User> assignee = userRepository.findById(taskDto.getAssignedToId());
+            if (assignee.isPresent() && canAssignToUser(project, currentUser, assignee.get())) {
+                return assignee.get();
+            }
+        }
+        
+        // Default to current user if they are a project member
+        if (isProjectMember(project.getId(), currentUser.getId())) {
+            return currentUser;
+        }
+        
+        // If current user is not a member, don't assign anyone
+        return null;
+    }
+
+    /**
+     * Check if user can access a project
+     */
+    private boolean canAccessProject(Project project, User currentUser) {
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            return true;
+        }
+        return project.getCreator().equals(currentUser) || project.getVisibility() == Project.Visibility.PUBLIC;
+    }
+
+    /**
+     * Check if user can modify a project
+     */
+    private boolean canModifyProject(Project project, User currentUser) {
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            return true;
+        }
+        return project.getCreator().equals(currentUser);
+    }
+
+    /**
+     * Check if user can access a task
+     */
+    private boolean canAccessTask(Task task, User currentUser) {
+        return canAccessProject(task.getProject(), currentUser);
+    }
+
+    /**
+     * Check if user can modify a task
+     */
+    private boolean canModifyTask(Task task, User currentUser) {
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            return true;
+        }
+        return task.getProject().getCreator().equals(currentUser) || 
+               task.getAssignedTo() != null && task.getAssignedTo().equals(currentUser);
+    }
+
+    /**
+     * Check if user can assign tasks in this project
+     */
+    private boolean canAssignTask(Project project, User currentUser) {
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            return true;
+        }
+        return project.getCreator().equals(currentUser);
+    }
+
+    /**
+     * Check if user can assign task to specific user (must be project member)
+     */
+    private boolean canAssignToUser(Project project, User currentUser, User assignee) {
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            return isProjectMember(project.getId(), assignee.getId());
+        }
+        // Can assign to self if they are a project member
+        if (assignee.equals(currentUser)) {
+            return isProjectMember(project.getId(), currentUser.getId());
+        }
+        // Can assign to other project members if user is project creator
+        return project.getCreator().equals(currentUser) && isProjectMember(project.getId(), assignee.getId());
+    }
+
+    /**
+     * Check if user is a member of the project
+     */
+    private boolean isProjectMember(Long projectId, Long userId) {
+        return projectMemberRepository.existsByProjectIdAndUserId(projectId, userId);
     }
 
     // Conversion methods
-    private TaskDto convertToDto(Task task) {
+    private TaskDto convertToDto(Task task, User currentUser) {
         TaskDto dto = new TaskDto();
         dto.setId(task.getId());
         dto.setProjectId(task.getProject().getId());
@@ -165,6 +318,13 @@ public class TaskService {
         dto.setDueDate(task.getDueDate());
         dto.setCreatedAt(task.getCreatedAt());
         dto.setUpdatedAt(task.getUpdatedAt());
+        
+        // Set assignee information
+        if (task.getAssignedTo() != null) {
+            dto.setAssignedToId(task.getAssignedTo().getId());
+            dto.setAssignedToName(task.getAssignedTo().getName());
+        }
+        
         return dto;
     }
 
