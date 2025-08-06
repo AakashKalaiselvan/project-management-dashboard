@@ -60,25 +60,25 @@ const NotificationBell: React.FC = () => {
   };
 
   return (
-    <div className="notification-bell">
+    <div className="jira-notification-bell">
       <button
-        className="notification-button"
+        className="jira-notification-button"
         onClick={() => setShowDropdown(!showDropdown)}
         title="Notifications"
       >
-        <span className="bell-icon">🔔</span>
+        <span className="jira-bell-icon">🔔</span>
         {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount}</span>
+          <span className="jira-notification-badge">{unreadCount}</span>
         )}
       </button>
 
       {showDropdown && (
-        <div className="notification-dropdown">
-          <div className="notification-header">
-            <h4>Notifications</h4>
+        <div className="jira-notification-dropdown">
+          <div className="jira-notification-header">
+            <h4 className="jira-notification-title">Notifications</h4>
             {unreadCount > 0 && (
               <button
-                className="btn btn-sm btn-outline-primary"
+                className="jira-mark-all-read-btn"
                 onClick={handleMarkAllAsRead}
                 disabled={loading}
               >
@@ -87,20 +87,20 @@ const NotificationBell: React.FC = () => {
             )}
           </div>
 
-          <div className="notification-list">
+          <div className="jira-notification-list">
             {notifications.length === 0 ? (
-              <p className="no-notifications">No unread notifications</p>
+              <p className="jira-no-notifications">No unread notifications</p>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                  className={`jira-notification-item ${!notification.read ? 'jira-unread' : ''}`}
                   onClick={() => handleMarkAsRead(notification.id)}
                 >
-                  <div className="notification-message">
+                  <div className="jira-notification-message">
                     {notification.message}
                   </div>
-                  <div className="notification-time">
+                  <div className="jira-notification-time">
                     {formatDate(notification.createdAt)}
                   </div>
                 </div>
@@ -109,8 +109,8 @@ const NotificationBell: React.FC = () => {
           </div>
 
           {notifications.length > 0 && (
-            <div className="notification-footer">
-              <small className="text-muted">
+            <div className="jira-notification-footer">
+              <small className="jira-notification-hint">
                 Click to mark as read
               </small>
             </div>

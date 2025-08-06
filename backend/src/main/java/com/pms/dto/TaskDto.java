@@ -1,5 +1,6 @@
 package com.pms.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,29 +8,51 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Schema(description = "Task data transfer object for creating and updating tasks")
 public class TaskDto {
 
+    @Schema(description = "Task unique identifier", example = "1")
     private Long id;
+    
+    @Schema(description = "Project ID that the task belongs to", example = "1")
     private Long projectId;
 
+    @Schema(description = "Task title", example = "Design Homepage", required = true)
     @NotBlank(message = "Task title is required")
     @Size(max = 255, message = "Task title must be less than 255 characters")
     private String title;
 
+    @Schema(description = "Task description", example = "Create modern homepage design with responsive layout")
     private String description;
+    
+    @Schema(description = "Task priority level", example = "HIGH", allowableValues = {"LOW", "MEDIUM", "HIGH"})
     private Priority priority = Priority.MEDIUM;
+    
+    @Schema(description = "Task status", example = "IN_PROGRESS", allowableValues = {"TODO", "IN_PROGRESS", "COMPLETED"})
     private Status status = Status.TODO;
+    
+    @Schema(description = "Task due date", example = "2024-02-15")
     private LocalDate dueDate;
+    
+    @Schema(description = "Task creation timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime createdAt;
+    
+    @Schema(description = "Task last update timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime updatedAt;
+    
+    @Schema(description = "User ID assigned to this task", example = "2")
     private Long assignedToId;
+    
+    @Schema(description = "Name of the user assigned to this task", example = "Jane Smith")
     private String assignedToName;
 
     // Enums
+    @Schema(description = "Task priority levels")
     public enum Priority {
         LOW, MEDIUM, HIGH
     }
 
+    @Schema(description = "Task status values")
     public enum Status {
         TODO, IN_PROGRESS, COMPLETED
     }
@@ -148,8 +171,6 @@ public class TaskDto {
                 ", dueDate=" + dueDate +
                 ", assignedToId=" + assignedToId +
                 ", assignedToName='" + assignedToName + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
                 '}';
     }
 } 

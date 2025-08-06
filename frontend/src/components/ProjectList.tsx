@@ -60,136 +60,190 @@ const ProjectList: React.FC = () => {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return '#28a745';
-    if (progress >= 50) return '#ffc107';
-    return '#dc3545';
+    if (progress >= 80) return '#36B37E';
+    if (progress >= 50) return '#FFAB00';
+    return '#FF5630';
   };
 
   if (loading) {
-    return <div className="text-center">Loading projects...</div>;
+    return (
+      <div className="jira-project-list-loading">
+        <div className="jira-loading-spinner"></div>
+        <p className="jira-loading-text">Loading projects...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="d-flex justify-between align-center mb-3">
-        <h2>Projects</h2>
+    <div className="jira-project-list">
+      {/* Header */}
+      <div className="jira-project-list-header">
+        <div className="jira-project-list-title-section">
+          <h1 className="jira-project-list-title">Projects</h1>
+          <p className="jira-project-list-subtitle">Manage and track your projects</p>
+        </div>
         <button 
-          className="btn btn-primary" 
+          className="jira-create-project-btn" 
           onClick={() => setShowForm(true)}
         >
-          Create Project
+          <span className="jira-create-project-icon">+</span>
+          <span className="jira-create-project-text">Create Project</span>
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="card mb-3">
-        <div className="d-flex gap-2">
+      <div className="jira-project-search">
+        <div className="jira-search-container">
+          <span className="jira-search-icon">🔍</span>
           <input
             type="text"
-            className="form-control"
+            className="jira-search-input"
             placeholder="Search projects..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button className="btn btn-secondary" onClick={handleSearch}>
+          <button className="jira-search-btn" onClick={handleSearch}>
             Search
           </button>
           {searchTerm && (
-            <button className="btn btn-secondary" onClick={() => { setSearchTerm(''); loadProjects(); }}>
+            <button 
+              className="jira-clear-search-btn" 
+              onClick={() => { setSearchTerm(''); loadProjects(); }}
+            >
               Clear
             </button>
           )}
         </div>
       </div>
 
-      {/* Project Form Modal */}
-      {showForm && (
-        <div className="card mb-3">
-          <ProjectForm
-            onSubmit={handleCreateProject}
-            onCancel={() => setShowForm(false)}
-          />
-        </div>
-      )}
-
       {/* Projects Grid */}
-      <div className="grid grid-2">
-        {projects.map((project) => {
-          const completedTasks = project.tasks?.filter(t => t.status === 'COMPLETED').length || 0;
-          const totalTasks = project.tasks?.length || 0;
-          const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-          return (
-            <div key={project.id} className="card">
-              <div className="card-header">
-                <h3 className="card-title">{project.name}</h3>
-                <div className="d-flex gap-2">
-                  <Link to={`/projects/${project.id}`} className="btn btn-sm btn-primary">
-                    View
-                  </Link>
-                  <button 
-                    className="btn btn-sm btn-danger"
-                    onClick={() => project.id && handleDeleteProject(project.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
+      <div className="jira-projects-grid">
+        {projects.map((project) => (
+          <div key={project.id} className="jira-project-list-card">
+            <div className="jira-project-list-card-header">
+              <h3 className="jira-project-list-card-title">{project.name}</h3>
+              <div className="jira-project-list-card-actions">
+                <Link 
+                  to={`/projects/${project.id}`} 
+                  className="jira-project-list-card-link"
+                >
+                  View
+                </Link>
+                <button 
+                  className="jira-project-list-card-delete-btn"
+                  onClick={() => project.id && handleDeleteProject(project.id)}
+                >
+                  🗑️
+                </button>
               </div>
-              
-              <p className="text-muted mb-2">{project.description}</p>
-              
-              <div className="mb-2">
-                <div className="d-flex justify-between align-center mb-1">
-                  <small className="text-muted">Progress</small>
-                  <small className="text-muted">{Math.round(progress)}%</small>
-                </div>
-                <div className="progress">
+            </div>
+            
+            <p className="jira-project-list-card-description">{project.description}</p>
+            
+            <div className="jira-project-list-card-progress">
+              <div className="jira-progress-container">
+                <div className="jira-progress-bar">
                   <div 
-                    className="progress-bar" 
+                    className="jira-progress-fill"
                     style={{ 
-                      width: `${progress}%`,
-                      backgroundColor: getProgressColor(progress)
+                      width: `${project.tasks?.length ? 
+                        ((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0}%`,
+                      backgroundColor: getProgressColor(
+                        project.tasks?.length ? 
+                        ((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0
+                      )
                     }}
                   />
                 </div>
-                <small className="text-muted">
-                  {completedTasks} of {totalTasks} tasks completed
-                </small>
-              </div>
-
-              <div className="d-flex gap-2 mb-2">
-                {project.startDate && (
-                  <span className="badge badge-primary">
-                    Start: {new Date(project.startDate).toLocaleDateString()}
-                  </span>
-                )}
-                {project.endDate && (
-                  <span className="badge badge-primary">
-                    End: {new Date(project.endDate).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-
-              <div className="d-flex gap-2">
-                <span className="badge badge-primary">
-                  {totalTasks} Tasks
-                </span>
-                <span className="badge badge-success">
-                  {completedTasks} Completed
-                </span>
-                <span className="badge badge-warning">
-                  {totalTasks - completedTasks} Pending
+                <span className="jira-progress-text">
+                  Progress {project.tasks?.length ? 
+                    Math.round((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0}%
                 </span>
               </div>
             </div>
-          );
-        })}
+            
+            <div className="jira-project-list-card-stats">
+              <div className="jira-project-list-card-stat">
+                <span className="jira-project-list-card-stat-icon">📋</span>
+                <span className="jira-project-list-card-stat-text">
+                  {project.tasks?.length || 0} tasks
+                </span>
+              </div>
+              <div className="jira-project-list-card-stat">
+                <span className="jira-project-list-card-stat-icon">✅</span>
+                <span className="jira-project-list-card-stat-text">
+                  {project.tasks?.filter(t => t.status === 'COMPLETED').length || 0} completed
+                </span>
+              </div>
+              <div className="jira-project-list-card-stat">
+                <span className="jira-project-list-card-stat-icon">👥</span>
+                <span className="jira-project-list-card-stat-text">4 members</span>
+              </div>
+            </div>
+            
+            <div className="jira-project-list-card-footer">
+              <span className="jira-project-list-card-due">
+                📅 {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'No end date'}
+              </span>
+              <span className="jira-project-list-card-status">Active</span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {projects.length === 0 && (
-        <div className="card text-center">
-          <p className="text-muted">No projects found. Create your first project to get started!</p>
+        <div className="jira-empty-state">
+          <div className="jira-empty-state-icon">📁</div>
+          <h3 className="jira-empty-state-title">No projects found</h3>
+          <p className="jira-empty-state-description">
+            {searchTerm ? 'No projects match your search criteria.' : 'Get started by creating your first project.'}
+          </p>
+          {!searchTerm && (
+            <button 
+              className="jira-empty-state-btn"
+              onClick={() => setShowForm(true)}
+            >
+              Create Project
+            </button>
+          )}
+        </div>
+      )}
+
+      {showForm && (
+        <div className="jira-modal-overlay">
+          <div className="jira-modal-content jira-project-form-modal">
+            <div className="jira-task-detail-header-new">
+              <div className="jira-task-detail-header-left">
+                <div className="jira-task-detail-title-section">
+                  <h3 className="jira-task-detail-title-new">Create New Project</h3>
+                  <div className="jira-task-detail-meta">
+                    <span className="jira-task-detail-id">NEW PROJECT</span>
+                    <span className="jira-task-detail-separator">•</span>
+                    <span className="jira-task-detail-created">
+                      Set up a new project to organize your work
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="jira-task-detail-header-right">
+                <button 
+                  className="jira-task-detail-close-btn"
+                  onClick={() => setShowForm(false)}
+                >
+                  <span className="jira-task-detail-close-icon">✕</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="jira-task-detail-content-new">
+              <ProjectForm 
+                onSubmit={handleCreateProject}
+                onCancel={() => setShowForm(false)}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

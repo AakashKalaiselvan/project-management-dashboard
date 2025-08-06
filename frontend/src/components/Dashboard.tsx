@@ -38,80 +38,139 @@ const Dashboard: React.FC = () => {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return '#28a745';
-    if (progress >= 50) return '#ffc107';
-    return '#dc3545';
+    if (progress >= 80) return '#36B37E';
+    if (progress >= 50) return '#FFAB00';
+    return '#FF5630';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'COMPLETED': return '#36B37E';
+      case 'IN_PROGRESS': return '#FFAB00';
+      case 'TODO': return '#0052CC';
+      default: return '#6C7781';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return '#FF5630';
+      case 'MEDIUM': return '#FFAB00';
+      case 'LOW': return '#36B37E';
+      default: return '#6C7781';
+    }
   };
 
   if (loading) {
-    return <div className="text-center">Loading dashboard...</div>;
+    return (
+      <div className="jira-dashboard-loading">
+        <div className="jira-loading-spinner"></div>
+        <p className="jira-loading-text">Loading dashboard...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2 className="mb-3">Dashboard</h2>
+    <div className="jira-dashboard">
+      {/* Welcome Section */}
+      <div className="jira-dashboard-header">
+        <div className="jira-dashboard-title-section">
+          <h1 className="jira-dashboard-title">Dashboard</h1>
+          <p className="jira-dashboard-subtitle">Welcome back! Here's an overview of your work.</p>
+        </div>
+      </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-4 mb-3">
-        <div className="card">
-          <h3 className="card-title">Total Projects</h3>
-          <p className="text-center" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#667eea' }}>
-            {projects.length}
-          </p>
+      <div className="jira-summary-cards">
+        <div className="jira-summary-card">
+          <div className="jira-summary-card-icon">📁</div>
+          <div className="jira-summary-card-content">
+            <h3 className="jira-summary-card-number">{projects.length}</h3>
+            <p className="jira-summary-card-label">Total Projects</p>
+          </div>
         </div>
-        <div className="card">
-          <h3 className="card-title">My Tasks</h3>
-          <p className="text-center" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#17a2b8' }}>
-            {assignedTasks.length}
-          </p>
+        
+        <div className="jira-summary-card">
+          <div className="jira-summary-card-icon">📋</div>
+          <div className="jira-summary-card-content">
+            <h3 className="jira-summary-card-number">{assignedTasks.length}</h3>
+            <p className="jira-summary-card-label">My Tasks</p>
+          </div>
         </div>
-        <div className="card">
-          <h3 className="card-title">Overdue Tasks</h3>
-          <p className="text-center" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc3545' }}>
-            {overdueTasks.length}
-          </p>
+        
+        <div className="jira-summary-card">
+          <div className="jira-summary-card-icon">⚠️</div>
+          <div className="jira-summary-card-content">
+            <h3 className="jira-summary-card-number">{overdueTasks.length}</h3>
+            <p className="jira-summary-card-label">Overdue Tasks</p>
+          </div>
         </div>
-        <div className="card">
-          <h3 className="card-title">Due Today</h3>
-          <p className="text-center" style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ffc107' }}>
-            {dueTodayTasks.length}
-          </p>
+        
+        <div className="jira-summary-card">
+          <div className="jira-summary-card-icon">📅</div>
+          <div className="jira-summary-card-content">
+            <h3 className="jira-summary-card-number">{dueTodayTasks.length}</h3>
+            <p className="jira-summary-card-label">Due Today</p>
+          </div>
         </div>
       </div>
 
       {/* My Assigned Tasks */}
       {assignedTasks.length > 0 && (
-        <div className="card mb-3">
-          <div className="card-header">
-            <h3 className="card-title">My Assigned Tasks</h3>
+        <div className="jira-dashboard-section">
+          <div className="jira-section-header">
+            <h2 className="jira-section-title">My Assigned Tasks</h2>
+            <Link to="/tasks" className="jira-view-all-link">View all tasks</Link>
           </div>
-          <div className="grid grid-2">
+          <div className="jira-dashboard-task-cards">
             {assignedTasks.slice(0, 6).map((task) => (
-              <div key={task.id} className="card">
-                <div className="d-flex justify-between align-center mb-2">
-                  <h4>{task.title}</h4>
-                  <span className={`badge badge-${task.status === 'COMPLETED' ? 'success' : 'warning'}`}>
-                    {task.status}
-                  </span>
+              <div key={task.id} className="jira-dashboard-task-card">
+                <div className="jira-dashboard-task-card-header">
+                  <div className="jira-dashboard-task-card-title-section">
+                    <h4 className="jira-dashboard-task-card-title">{task.title}</h4>
+                    <div className="jira-dashboard-task-card-badges">
+                      <span 
+                        className="jira-dashboard-task-status-badge"
+                        style={{ backgroundColor: getStatusColor(task.status) }}
+                      >
+                        {task.status}
+                      </span>
+                      <span 
+                        className="jira-dashboard-task-priority-badge"
+                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                      >
+                        {task.priority}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-muted mb-2">{task.description}</p>
-                <div className="d-flex gap-2 mb-2">
-                  <span className={`badge badge-${task.priority === 'HIGH' ? 'danger' : task.priority === 'MEDIUM' ? 'warning' : 'primary'}`}>
-                    {task.priority}
-                  </span>
-                  {task.dueDate && (
-                    <span className={`badge badge-${new Date(task.dueDate) < new Date() ? 'danger' : 'primary'}`}>
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-                <div className="d-flex justify-between align-center">
-                  <small className="text-muted">
-                    Project: {projects.find(p => p.id === task.projectId)?.name || 'Unknown'}
-                  </small>
-                  <Link to={`/projects/${task.projectId}`} className="btn btn-sm btn-outline-primary">
-                    View Project
-                  </Link>
+                <div className="jira-dashboard-task-card-content">
+                  <p className="jira-dashboard-task-card-description">{task.description}</p>
+                  <div className="jira-dashboard-task-card-details">
+                    <div className="jira-dashboard-task-card-detail">
+                      <span className="jira-dashboard-task-card-detail-icon">📅</span>
+                      <span className="jira-dashboard-task-card-detail-label">Due:</span>
+                      <span className="jira-dashboard-task-card-detail-value">
+                        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                      </span>
+                    </div>
+                    <div className="jira-dashboard-task-card-detail">
+                      <span className="jira-dashboard-task-card-detail-icon">📁</span>
+                      <span className="jira-dashboard-task-card-detail-label">Project:</span>
+                      <span className="jira-dashboard-task-card-detail-value">
+                        {projects.find(p => p.id === task.projectId)?.name || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="jira-dashboard-task-card-actions">
+                    <Link to={`/projects/${task.projectId}`} className="jira-dashboard-task-card-link">
+                      View Project
+                    </Link>
+                    <button className="jira-dashboard-task-card-action-btn">
+                      <span className="jira-dashboard-task-card-action-icon">⏱️</span>
+                      <span>Log Time</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -120,38 +179,52 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Projects Overview */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Projects Overview</h3>
-          <Link to="/projects" className="btn btn-primary">View All Projects</Link>
+      <div className="jira-dashboard-section">
+        <div className="jira-section-header">
+          <h2 className="jira-section-title">Projects Overview</h2>
+          <Link to="/projects" className="jira-view-all-link">View all projects</Link>
         </div>
-        <div className="grid grid-2">
+        <div className="jira-project-cards">
           {projects.slice(0, 6).map((project) => (
-            <div key={project.id} className="card">
-              <div className="d-flex justify-between align-center mb-2">
-                <h4>{project.name}</h4>
-                <Link to={`/projects/${project.id}`} className="btn btn-sm btn-primary">
-                  View
-                </Link>
+            <div key={project.id} className="jira-project-card">
+              <div className="jira-project-card-header">
+                <h4 className="jira-project-card-title">{project.name}</h4>
+                <span className="jira-project-card-status">Active</span>
               </div>
-              <p className="text-muted mb-2">{project.description}</p>
-              <div className="mb-2">
-                <div className="progress">
-                  <div 
-                    className="progress-bar" 
-                    style={{ 
-                      width: `${project.tasks?.filter(t => t.status === 'COMPLETED').length || 0}%`,
-                      backgroundColor: getProgressColor(
-                        project.tasks?.length ? 
-                        ((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0
-                      )
-                    }}
-                  />
+              <p className="jira-project-card-description">{project.description}</p>
+              <div className="jira-project-card-progress">
+                <div className="jira-progress-container">
+                  <div className="jira-progress-bar">
+                    <div 
+                      className="jira-progress-fill"
+                      style={{ 
+                        width: `${project.tasks?.length ? 
+                          ((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0}%`,
+                        backgroundColor: getProgressColor(
+                          project.tasks?.length ? 
+                          ((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0
+                        )
+                      }}
+                    />
+                  </div>
+                  <span className="jira-progress-text">
+                    Progress {project.tasks?.length ? 
+                      Math.round((project.tasks.filter(t => t.status === 'COMPLETED').length / project.tasks.length) * 100) : 0}%
+                  </span>
                 </div>
-                <small className="text-muted">
-                  {project.tasks?.filter(t => t.status === 'COMPLETED').length || 0} of {project.tasks?.length || 0} tasks completed
-                </small>
+                <div className="jira-project-card-stats">
+                  <span className="jira-project-card-tasks">
+                    Tasks {project.tasks?.filter(t => t.status === 'COMPLETED').length || 0} of {project.tasks?.length || 0} completed
+                  </span>
+                  <span className="jira-project-card-due">
+                    📅 {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'No end date'}
+                  </span>
+                  <span className="jira-project-card-members">👥 4 members</span>
+                </div>
               </div>
+              <Link to={`/projects/${project.id}`} className="jira-project-card-link">
+                View Project
+              </Link>
             </div>
           ))}
         </div>
@@ -159,27 +232,56 @@ const Dashboard: React.FC = () => {
 
       {/* High Priority Tasks */}
       {highPriorityTasks.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">High Priority Tasks</h3>
-          </div>
-          <div className="grid grid-2">
+        <div className="jira-dashboard-section">
+          <h2 className="jira-section-title">High Priority Tasks</h2>
+          <div className="jira-dashboard-task-cards">
             {highPriorityTasks.slice(0, 4).map((task) => (
-              <div key={task.id} className="card">
-                <div className="d-flex justify-between align-center mb-2">
-                  <h4>{task.title}</h4>
-                  <span className={`badge badge-${task.status === 'COMPLETED' ? 'success' : 'warning'}`}>
-                    {task.status}
-                  </span>
+              <div key={task.id} className="jira-dashboard-task-card jira-high-priority-task">
+                <div className="jira-dashboard-task-card-header">
+                  <div className="jira-dashboard-task-card-title-section">
+                    <h4 className="jira-dashboard-task-card-title">{task.title}</h4>
+                    <div className="jira-dashboard-task-card-badges">
+                      <span 
+                        className="jira-dashboard-task-status-badge"
+                        style={{ backgroundColor: getStatusColor(task.status) }}
+                      >
+                        {task.status}
+                      </span>
+                      <span className="jira-dashboard-task-priority-badge jira-high-priority">
+                        HIGH
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-muted mb-2">{task.description}</p>
-                <div className="d-flex gap-2">
-                  <span className="badge badge-danger">HIGH</span>
-                  {task.dueDate && (
-                    <span className="badge badge-primary">
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                    </span>
-                  )}
+                <div className="jira-dashboard-task-card-content">
+                  <p className="jira-dashboard-task-card-description">{task.description}</p>
+                  <div className="jira-dashboard-task-card-details">
+                    {task.dueDate && (
+                      <div className="jira-dashboard-task-card-detail">
+                        <span className="jira-dashboard-task-card-detail-icon">📅</span>
+                        <span className="jira-dashboard-task-card-detail-label">Due:</span>
+                        <span className="jira-dashboard-task-card-detail-value">
+                          {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="jira-dashboard-task-card-detail">
+                      <span className="jira-dashboard-task-card-detail-icon">📁</span>
+                      <span className="jira-dashboard-task-card-detail-label">Project:</span>
+                      <span className="jira-dashboard-task-card-detail-value">
+                        {projects.find(p => p.id === task.projectId)?.name || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="jira-dashboard-task-card-actions">
+                    <Link to={`/projects/${task.projectId}`} className="jira-dashboard-task-card-link">
+                      View Project
+                    </Link>
+                    <button className="jira-dashboard-task-card-action-btn">
+                      <span className="jira-dashboard-task-card-action-icon">⏱️</span>
+                      <span>Log Time</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -189,27 +291,63 @@ const Dashboard: React.FC = () => {
 
       {/* Overdue Tasks */}
       {overdueTasks.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Overdue Tasks</h3>
+        <div className="jira-dashboard-section">
+          <div className="jira-section-header">
+            <div className="jira-section-title-wrapper">
+              <span className="jira-section-icon">⚠️</span>
+              <h2 className="jira-section-title jira-overdue-section-title">Overdue Tasks</h2>
+              <span className="jira-overdue-count">({overdueTasks.length})</span>
+            </div>
+            <Link to="/tasks" className="jira-view-all-link">View all tasks</Link>
           </div>
-          <div className="grid grid-2">
+          <div className="jira-dashboard-task-cards">
             {overdueTasks.slice(0, 4).map((task) => (
-              <div key={task.id} className="card">
-                <div className="d-flex justify-between align-center mb-2">
-                  <h4>{task.title}</h4>
-                  <span className="badge badge-danger">OVERDUE</span>
+              <div key={task.id} className="jira-dashboard-task-card jira-overdue-task">
+                <div className="jira-dashboard-task-card-header">
+                  <div className="jira-dashboard-task-card-title-section">
+                    <h4 className="jira-dashboard-task-card-title">{task.title}</h4>
+                    <div className="jira-dashboard-task-card-badges">
+                      <span className="jira-dashboard-task-status-badge jira-overdue">
+                        OVERDUE
+                      </span>
+                      <span 
+                        className="jira-dashboard-task-priority-badge"
+                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                      >
+                        {task.priority}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-muted mb-2">{task.description}</p>
-                <div className="d-flex gap-2">
-                  <span className={`badge badge-${task.priority === 'HIGH' ? 'danger' : task.priority === 'MEDIUM' ? 'warning' : 'primary'}`}>
-                    {task.priority}
-                  </span>
-                  {task.dueDate && (
-                    <span className="badge badge-danger">
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                    </span>
-                  )}
+                <div className="jira-dashboard-task-card-content">
+                  <p className="jira-dashboard-task-card-description">{task.description}</p>
+                  <div className="jira-dashboard-task-card-details">
+                    {task.dueDate && (
+                      <div className="jira-dashboard-task-card-detail">
+                        <span className="jira-dashboard-task-card-detail-icon">📅</span>
+                        <span className="jira-dashboard-task-card-detail-label">Due:</span>
+                        <span className="jira-dashboard-task-card-detail-value jira-overdue">
+                          {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="jira-dashboard-task-card-detail">
+                      <span className="jira-dashboard-task-card-detail-icon">📁</span>
+                      <span className="jira-dashboard-task-card-detail-label">Project:</span>
+                      <span className="jira-dashboard-task-card-detail-value">
+                        {projects.find(p => p.id === task.projectId)?.name || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="jira-dashboard-task-card-actions">
+                    <Link to={`/projects/${task.projectId}`} className="jira-dashboard-task-card-link">
+                      View Project
+                    </Link>
+                    <button className="jira-dashboard-task-card-action-btn">
+                      <span className="jira-dashboard-task-card-action-icon">⏱️</span>
+                      <span>Log Time</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

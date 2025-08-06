@@ -75,66 +75,111 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({ milestone, onSubmit, onCa
   };
 
   return (
-    <form onSubmit={handleSubmit} className="milestone-form">
-      <div className="form-group">
-        <label className="form-label">Title *</label>
-        <input
-          type="text"
-          name="title"
-          className={`form-control ${errors.title ? 'error' : ''}`}
-          value={formData.title || ''}
-          onChange={handleChange}
-          placeholder="Enter milestone title"
-        />
-        {errors.title && <small className="text-danger">{errors.title}</small>}
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Description</label>
-        <textarea
-          name="description"
-          className="form-control"
-          value={formData.description || ''}
-          onChange={handleChange}
-          placeholder="Enter milestone description (optional)"
-          rows={3}
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Target Date *</label>
-        <input
-          type="date"
-          name="targetDate"
-          className={`form-control ${errors.targetDate ? 'error' : ''}`}
-          value={formData.targetDate || ''}
-          onChange={handleChange}
-        />
-        {errors.targetDate && <small className="text-danger">{errors.targetDate}</small>}
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">
+    <div className="jira-milestone-form">
+      <form onSubmit={handleSubmit} className="jira-milestone-form-content">
+        <div className="jira-form-group">
+          <label className="jira-form-label">
+            <span className="jira-form-label-icon">📝</span>
+            <span>Title *</span>
+          </label>
           <input
-            type="checkbox"
-            name="completed"
-            checked={formData.completed || false}
+            type="text"
+            name="title"
+            className={`jira-form-input ${errors.title ? 'jira-error' : ''}`}
+            value={formData.title || ''}
             onChange={handleChange}
-            className="form-checkbox"
+            placeholder="Enter milestone title"
           />
-          <span className="ml-2">Mark as completed</span>
-        </label>
-      </div>
+          {errors.title && (
+            <div className="jira-error-message">
+              <span className="jira-error-icon">⚠️</span>
+              <span>{errors.title}</span>
+            </div>
+          )}
+        </div>
 
-      <div className="form-actions">
-        <button type="submit" className="btn btn-primary">
-          {milestone ? 'Update Milestone' : 'Create Milestone'}
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
-          Cancel
-        </button>
-      </div>
-    </form>
+        <div className="jira-form-group">
+          <label className="jira-form-label">
+            <span className="jira-form-label-icon">📄</span>
+            <span>Description</span>
+          </label>
+          <textarea
+            name="description"
+            className="jira-form-textarea"
+            value={formData.description || ''}
+            onChange={handleChange}
+            placeholder="Enter milestone description (optional)"
+            rows={4}
+          />
+          <div className="jira-form-help">
+            Provide additional context about this milestone
+          </div>
+        </div>
+
+        <div className="jira-form-group">
+          <label className="jira-form-label">
+            <span className="jira-form-label-icon">📅</span>
+            <span>Target Date *</span>
+          </label>
+          <input
+            type="date"
+            name="targetDate"
+            className={`jira-form-input ${errors.targetDate ? 'jira-error' : ''}`}
+            value={formData.targetDate || ''}
+            onChange={handleChange}
+          />
+          {errors.targetDate && (
+            <div className="jira-error-message">
+              <span className="jira-error-icon">⚠️</span>
+              <span>{errors.targetDate}</span>
+            </div>
+          )}
+          <div className="jira-form-help">
+            Set the target completion date for this milestone
+          </div>
+        </div>
+
+        <div className="jira-form-group">
+          <label className="jira-form-label">
+            <span className="jira-form-label-icon">✅</span>
+            <span>Status</span>
+          </label>
+          <div className="jira-milestone-completion-wrapper">
+            <input
+              type="checkbox"
+              name="completed"
+              checked={formData.completed || false}
+              onChange={handleChange}
+              className="jira-milestone-completion-checkbox"
+            />
+            <span className="jira-milestone-completion-text">
+              Mark as completed
+            </span>
+          </div>
+          <div className="jira-form-help">
+            Check this if the milestone is already completed
+          </div>
+        </div>
+
+        <div className="jira-milestone-form-actions">
+          <button 
+            type="submit" 
+            className="jira-milestone-form-submit-btn"
+          >
+            <span className="jira-milestone-form-submit-icon">💾</span>
+            <span>{milestone ? 'Update Milestone' : 'Create Milestone'}</span>
+          </button>
+          <button 
+            type="button" 
+            className="jira-milestone-form-cancel-btn" 
+            onClick={onCancel}
+          >
+            <span className="jira-milestone-form-cancel-icon">✕</span>
+            <span>Cancel</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

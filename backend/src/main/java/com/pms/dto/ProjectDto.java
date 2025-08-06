@@ -1,5 +1,6 @@
 package com.pms.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -7,23 +8,46 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Schema(description = "Project data transfer object for creating and updating projects")
 public class ProjectDto {
 
+    @Schema(description = "Project unique identifier", example = "1")
     private Long id;
 
+    @Schema(description = "Project name", example = "Website Redesign", required = true)
     @NotBlank(message = "Project name is required")
     @Size(max = 255, message = "Project name must be less than 255 characters")
     private String name;
 
+    @Schema(description = "Project description", example = "Redesign company website with modern UI and improved user experience")
     private String description;
+    
+    @Schema(description = "Project start date", example = "2024-01-15")
     private LocalDate startDate;
+    
+    @Schema(description = "Project end date", example = "2024-06-30")
     private LocalDate endDate;
+    
+    @Schema(description = "Project creation timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime createdAt;
+    
+    @Schema(description = "Project last update timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime updatedAt;
+    
+    @Schema(description = "Creator user ID", example = "1")
     private Long creatorId;
+    
+    @Schema(description = "Creator user name", example = "John Doe")
     private String creatorName;
+    
+    @Schema(description = "Project visibility", example = "PUBLIC", allowableValues = {"PUBLIC", "PRIVATE"})
     private String visibility;
+    
+    @Schema(description = "List of tasks in this project")
     private List<TaskDto> tasks;
+
+    @Schema(description = "Project completion progress percentage", example = "25.0")
+    private Double progress;
 
     public Double getProgress() {
         return progress;
@@ -32,8 +56,6 @@ public class ProjectDto {
     public void setProgress(Double progress) {
         this.progress = progress;
     }
-
-    private Double progress;
 
     // Constructors
     public ProjectDto() {}
@@ -143,11 +165,7 @@ public class ProjectDto {
                 ", description='" + description + '\'' +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
-                ", creatorId=" + creatorId +
-                ", creatorName='" + creatorName + '\'' +
-                ", visibility='" + visibility + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
+                ", progress=" + progress +
                 '}';
     }
 } 

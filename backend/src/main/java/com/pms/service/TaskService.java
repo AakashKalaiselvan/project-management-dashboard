@@ -5,6 +5,7 @@ import com.pms.entity.Project;
 import com.pms.entity.Task;
 import com.pms.entity.User;
 import com.pms.repository.ProjectRepository;
+import com.pms.repository.ProjectMemberRepository;
 import com.pms.repository.TaskRepository;
 import com.pms.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,15 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final NotificationService notificationService;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserRepository userRepository, NotificationService notificationService) {
+    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserRepository userRepository, ProjectMemberRepository projectMemberRepository, NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.projectMemberRepository = projectMemberRepository;
         this.notificationService = notificationService;
     }
 
@@ -232,8 +235,13 @@ public class TaskService {
         if (taskDto.getAssignedToId() != null) {
             Optional<User> assignee = userRepository.findById(taskDto.getAssignedToId());
             if (assignee.isPresent() && canAssignToUser(project, currentUser, assignee.get())) {
+                System.out.println("Task assigned to user: " + assignee.get().getName() + " (ID: " + assignee.get().getId() + ")");
                 return assignee.get();
+            } else {
+                System.out.println("Invalid assignee or permission denied. Assignee ID: " + taskDto.getAssignedToId());
             }
+        } else {
+            System.out.println("No assignee specified, defaulting to current user: " + currentUser.getName());
         }
         
         // Default to current user
@@ -283,9 +291,23 @@ public class TaskService {
      */
     private boolean canAssignTask(Project project, User currentUser) {
         if (currentUser.getRole() == User.Role.ADMIN) {
+            System.out.println("Admin can assign tasks");
             return true;
         }
-        return project.getCreator().equals(currentUser) || project.getVisibility() == Project.Visibility.PUBLIC;
+        // Project creator can always assign tasks
+        if (project.getCreator().equals(currentUser)) {
+            System.out.println("Project creator can assign tasks");
+            return true;
+        }
+        // Public project participants can assign tasks
+        if (project.getVisibility() == Project.Visibility.PUBLIC) {
+            System.out.println("Public project participant can assign tasks");
+            return true;
+        }
+        // Project members can assign tasks to other members
+        boolean isMember = isProjectMember(project, currentUser);
+        System.out.println("Project member assignment permission: " + isMember);
+        return isMember;
     }
 
     /**
@@ -293,10 +315,40 @@ public class TaskService {
      */
     private boolean canAssignToUser(Project project, User currentUser, User assignee) {
         if (currentUser.getRole() == User.Role.ADMIN) {
+            System.out.println("Admin can assign to any user");
             return true;
         }
-        // Can assign to self or if project is public
-        return assignee.equals(currentUser) || project.getVisibility() == Project.Visibility.PUBLIC;
+        // Can assign to self
+        if (assignee.equals(currentUser)) {
+            System.out.println("User can assign to self");
+            return true;
+        }
+        // Project creator can assign to any project member
+        if (project.getCreator().equals(currentUser)) {
+            boolean assigneeIsMember = isProjectMember(project, assignee);
+            System.out.println("Project creator assigning to member: " + assigneeIsMember);
+            return assigneeIsMember;
+        }
+        // Public project participants can assign to any user
+        if (project.getVisibility() == Project.Visibility.PUBLIC) {
+            System.out.println("Public project - can assign to any user");
+            return true;
+        }
+        // Project members can assign to other project members
+        if (isProjectMember(project, currentUser)) {
+            boolean assigneeIsMember = isProjectMember(project, assignee);
+            System.out.println("Project member assigning to other member: " + assigneeIsMember);
+            return assigneeIsMember;
+        }
+        System.out.println("No permission to assign task");
+        return false;
+    }
+
+    /**
+     * Check if user is a member of the project
+     */
+    private boolean isProjectMember(Project project, User user) {
+        return projectMemberRepository.existsByProjectIdAndUserId(project.getId(), user.getId());
     }
 
     // Conversion methods

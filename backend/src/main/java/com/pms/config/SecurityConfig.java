@@ -34,7 +34,11 @@ public class SecurityConfig {
             .cors(cors -> cors.and())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Swagger UI and OpenAPI documentation endpoints
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                // Authentication endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )

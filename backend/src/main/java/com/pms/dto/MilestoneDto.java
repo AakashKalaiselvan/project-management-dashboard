@@ -1,5 +1,6 @@
 package com.pms.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,26 +8,35 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Schema(description = "Milestone data transfer object for creating and managing project milestones")
 public class MilestoneDto {
 
+    @Schema(description = "Milestone unique identifier", example = "1")
     private Long id;
 
+    @Schema(description = "Milestone title", example = "Design Phase Complete", required = true)
     @NotBlank(message = "Milestone title is required")
     @Size(max = 255, message = "Milestone title must be less than 255 characters")
     private String title;
 
+    @Schema(description = "Milestone description", example = "Complete all design mockups and get approval")
     @Size(max = 1000, message = "Description must be less than 1000 characters")
     private String description;
 
+    @Schema(description = "Target completion date for the milestone", example = "2024-02-15", required = true)
     @NotNull(message = "Target date is required")
     private LocalDate targetDate;
 
+    @Schema(description = "Whether the milestone has been completed", example = "false")
     private boolean completed = false;
 
+    @Schema(description = "Project ID that the milestone belongs to", example = "1")
     private Long projectId;
 
+    @Schema(description = "Milestone creation timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime createdAt;
 
+    @Schema(description = "Milestone last update timestamp", example = "2024-01-15T10:00:00")
     private LocalDateTime updatedAt;
 
     // Constructors

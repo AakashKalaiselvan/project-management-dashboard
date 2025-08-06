@@ -1,11 +1,26 @@
 package com.pms.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Authentication response containing user information and JWT token")
 public class AuthResponse {
+    
+    @Schema(description = "JWT token for authentication", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
+    
+    @Schema(description = "User's email address", example = "john@example.com")
     private String email;
+    
+    @Schema(description = "User's full name", example = "John Doe")
     private String name;
+    
+    @Schema(description = "User's role in the system", example = "USER", allowableValues = {"USER", "ADMIN"})
     private String role;
+    
+    @Schema(description = "User's unique identifier", example = "1")
     private Long id;
+    
+    @Schema(description = "Error message (if authentication failed)", example = "Invalid email or password")
     private String message;
 
     public AuthResponse() {}

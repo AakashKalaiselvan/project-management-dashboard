@@ -66,79 +66,93 @@ const CommentList: React.FC<CommentListProps> = ({ comments, onCommentUpdated })
 
   if (comments.length === 0) {
     return (
-      <div className="comment-list">
-        <h4>Comments</h4>
-        <p className="no-comments">No comments yet. Be the first to comment!</p>
+      <div className="jira-comment-list">
+        <h4 className="jira-comment-list-title">Comments</h4>
+        <p className="jira-no-comments">No comments yet. Be the first to comment!</p>
       </div>
     );
   }
 
   return (
-    <div className="comment-list">
-      <h4>Comments ({comments.length})</h4>
-      <div className="comments-container">
+    <div className="jira-comment-list">
+      <h4 className="jira-comment-list-title">Comments ({comments.length})</h4>
+      <div className="jira-comments-container">
         {comments.map((comment) => (
-          <div key={comment.id} className="comment-item">
-            <div className="comment-header">
-              <div className="comment-author">
-                <strong>{comment.userName}</strong>
-                <small className="text-muted ml-2">
+          <div key={comment.id} className="jira-comment-item">
+            <div className="jira-comment-header">
+              <div className="jira-comment-author">
+                <strong className="jira-comment-author-name">{comment.userName}</strong>
+                <small className="jira-comment-date">
                   {formatDate(comment.createdAt)}
                 </small>
               </div>
-              <div className="comment-actions">
+              <div className="jira-comment-actions">
                 {canEditComment(comment) && (
                   <button
-                    className="btn btn-sm btn-outline-primary"
+                    className="jira-comment-edit-btn"
                     onClick={() => handleEdit(comment)}
                     disabled={isSubmitting}
                   >
-                    Edit
+                    <span className="jira-comment-edit-icon">✏️</span>
+                    <span>Edit</span>
                   </button>
                 )}
                 {canDeleteComment(comment) && (
                   <button
-                    className="btn btn-sm btn-outline-danger ml-1"
+                    className="jira-comment-delete-btn"
                     onClick={() => handleDelete(comment.id)}
                     disabled={isSubmitting}
                   >
-                    Delete
+                    <span className="jira-comment-delete-icon">🗑️</span>
+                    <span>Delete</span>
                   </button>
                 )}
               </div>
             </div>
             
             {editingComment === comment.id ? (
-              <div className="comment-edit-form">
+              <div className="jira-comment-edit-form">
                 <textarea
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
                   rows={3}
                   maxLength={1000}
                   disabled={isSubmitting}
+                  className="jira-comment-edit-textarea"
                 />
-                <div className="edit-actions mt-2">
+                <div className="jira-comment-edit-actions">
                   <button
-                    className="btn btn-sm btn-primary"
+                    className="jira-comment-update-btn"
                     onClick={() => handleUpdate(comment.id)}
                     disabled={isSubmitting || !editText.trim()}
                   >
-                    {isSubmitting ? 'Updating...' : 'Update'}
+                    {isSubmitting ? (
+                      <>
+                        <div className="jira-loading-spinner-small"></div>
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="jira-comment-update-icon">✅</span>
+                        <span>Update</span>
+                      </>
+                    )}
                   </button>
                   <button
-                    className="btn btn-sm btn-secondary ml-1"
+                    className="jira-comment-cancel-btn"
                     onClick={() => {
                       setEditingComment(null);
                       setEditText('');
                     }}
                     disabled={isSubmitting}
                   >
-                    Cancel
+                    <span className="jira-comment-cancel-icon">✕</span>
+                    <span>Cancel</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="comment-text">
+              <div className="jira-comment-text">
                 {comment.text}
               </div>
             )}

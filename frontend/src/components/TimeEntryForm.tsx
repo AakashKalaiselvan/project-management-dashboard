@@ -42,43 +42,74 @@ const TimeEntryForm: React.FC<TimeEntryFormProps> = ({ taskId, taskTitle, onSucc
   };
 
   return (
-    <div className="time-entry-form">
-      <h4>Log Hours for Task</h4>
-      <p className="task-title">Task: {taskTitle}</p>
+    <div className="jira-time-entry-form">
+      <div className="jira-time-entry-form-header">
+        <div className="jira-time-entry-form-icon">
+          <span>⏱️</span>
+        </div>
+        <div className="jira-time-entry-form-title">
+          <h4 className="jira-time-entry-form-title-text">Log Time Entry</h4>
+          <p className="jira-time-entry-form-task-title">Task: {taskTitle}</p>
+        </div>
+      </div>
       
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="hoursSpent">Hours Spent:</label>
-          <input
-            type="number"
-            id="hoursSpent"
-            value={hoursSpent}
-            onChange={(e) => setHoursSpent(e.target.value)}
-            min="0.1"
-            step="0.1"
-            placeholder="e.g., 2.5"
-            required
-            disabled={isSubmitting}
-          />
+      <form onSubmit={handleSubmit} className="jira-time-entry-form-content">
+        <div className="jira-form-group">
+          <label htmlFor="hoursSpent" className="jira-form-label">
+            <span className="jira-form-label-icon">🕐</span>
+            Hours Spent
+          </label>
+          <div className="jira-input-wrapper">
+            <input
+              type="number"
+              id="hoursSpent"
+              value={hoursSpent}
+              onChange={(e) => setHoursSpent(e.target.value)}
+              min="0.1"
+              step="0.1"
+              placeholder="e.g., 2.5"
+              required
+              disabled={isSubmitting}
+              className="jira-form-input jira-time-input"
+            />
+            <span className="jira-input-suffix">hours</span>
+          </div>
+          <small className="jira-form-help">Enter the number of hours you spent on this task</small>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="jira-error-message jira-time-entry-error">
+            <span className="jira-error-icon">⚠️</span>
+            {error}
+          </div>
+        )}
 
-        <div className="form-actions">
+        <div className="jira-time-entry-form-actions">
           <button
             type="submit"
-            className="btn btn-primary"
+            className="jira-time-entry-form-submit-btn"
             disabled={isSubmitting || !hoursSpent}
           >
-            {isSubmitting ? 'Logging...' : 'Log Hours'}
+            {isSubmitting ? (
+              <>
+                <div className="jira-loading-spinner-small"></div>
+                <span>Logging Hours...</span>
+              </>
+            ) : (
+              <>
+                <span className="jira-time-entry-form-submit-icon">📝</span>
+                <span>Log Hours</span>
+              </>
+            )}
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="jira-time-entry-form-cancel-btn"
             onClick={handleCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            <span className="jira-time-entry-form-cancel-icon">✕</span>
+            <span>Cancel</span>
           </button>
         </div>
       </form>
