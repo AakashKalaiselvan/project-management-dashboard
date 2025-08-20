@@ -219,7 +219,9 @@ const Dashboard: React.FC = () => {
                   <span className="jira-project-card-due">
                     📅 {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'No end date'}
                   </span>
-                  <span className="jira-project-card-members">👥 4 members</span>
+                  <span className="jira-project-card-members">
+                    👥 {project.memberCount || 0} member{project.memberCount !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
               <Link to={`/projects/${project.id}`} className="jira-project-card-link">

@@ -178,7 +178,9 @@ const ProjectList: React.FC = () => {
               </div>
               <div className="jira-project-list-card-stat">
                 <span className="jira-project-list-card-stat-icon">👥</span>
-                <span className="jira-project-list-card-stat-text">4 members</span>
+                <span className="jira-project-list-card-stat-text">
+                  {project.memberCount || 0} member{project.memberCount !== 1 ? 's' : ''}
+                </span>
               </div>
             </div>
             

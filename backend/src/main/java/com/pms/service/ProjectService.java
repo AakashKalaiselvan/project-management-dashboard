@@ -267,6 +267,10 @@ public class ProjectService {
         // Set visibility
         dto.setVisibility(project.getVisibility().name());
 
+        // Calculate member count
+        int memberCount = (int) projectMemberRepository.countByProjectId(project.getId());
+        dto.setMemberCount(memberCount);
+
         // Convert tasks to DTOs
         List<TaskDto> taskDtos = project.getTasks().stream()
                 .map(task -> convertTaskToDto(task, currentUser))

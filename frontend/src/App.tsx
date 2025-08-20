@@ -30,46 +30,66 @@ function AppContent() {
 
   return (
     <div className="jira-app">
-      {/* Only show layout for authenticated routes */}
-      {!isAuthRoute ? (
-        <div className="jira-layout">
-          <TopBar />
-          <div className="jira-main-container">
-            <Sidebar />
-            <main className="jira-main-content">
-              <Routes>
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/projects" element={
-                  <ProtectedRoute>
-                    <ProjectList />
-                  </ProtectedRoute>
-                } />
-                <Route path="/projects/:id" element={
-                  <ProtectedRoute>
-                    <ProjectDetail />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tasks" element={
-                  <ProtectedRoute>
-                    <TaskList />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
-        </div>
-      ) : (
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      )}
+      <Routes>
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Protected routes with layout */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <div className="jira-layout">
+              <TopBar />
+              <div className="jira-main-container">
+                <Sidebar />
+                <main className="jira-main-content">
+                  <Dashboard />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects" element={
+          <ProtectedRoute>
+            <div className="jira-layout">
+              <TopBar />
+              <div className="jira-main-container">
+                <Sidebar />
+                <main className="jira-main-content">
+                  <ProjectList />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects/:id" element={
+          <ProtectedRoute>
+            <div className="jira-layout">
+              <TopBar />
+              <div className="jira-main-container">
+                <Sidebar />
+                <main className="jira-main-content">
+                  <ProjectDetail />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/tasks" element={
+          <ProtectedRoute>
+            <div className="jira-layout">
+              <TopBar />
+              <div className="jira-main-container">
+                <Sidebar />
+                <main className="jira-main-content">
+                  <TaskList />
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }

@@ -1,0 +1,5 @@
+# Handle client-side routing for React Router
+# This file tells the server to serve index.html for all routes
+# and let React Router handle the routing on the client side
+
+/*    /index.html   200

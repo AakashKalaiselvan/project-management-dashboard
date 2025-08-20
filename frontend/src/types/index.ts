@@ -17,6 +17,7 @@ export interface Project {
   creatorName?: string;
   visibility?: string;
   tasks?: Task[];
+  memberCount?: number;
 }
 
 export interface Task {

@@ -2,6 +2,7 @@ package com.pms.security;
 
 import com.pms.entity.User;
 import com.pms.repository.UserRepository;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,6 +52,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 username = jwtUtil.extractUsername(jwt);
                 role = jwtUtil.extractRole(jwt);
                 logger.info("JWT Token extracted - Username: " + username + ", Role: " + role + " for URI: " + requestURI);
+            } catch (SignatureException e) {
+                logger.error("JWT signature verification failed for URI: " + requestURI + ". This usually indicates a JWT secret mismatch between environments.", e);
+                // Continue with the filter chain - let the endpoint handle the authentication failure
             } catch (Exception e) {
                 logger.error("Error extracting JWT token for URI: " + requestURI, e);
             }

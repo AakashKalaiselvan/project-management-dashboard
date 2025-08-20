@@ -49,6 +49,17 @@ public class ProjectDto {
     @Schema(description = "Project completion progress percentage", example = "25.0")
     private Double progress;
 
+    @Schema(description = "Number of project members", example = "3")
+    private Integer memberCount;
+
+    public Integer getMemberCount() {
+        return memberCount;
+    }
+
+    public void setMemberCount(Integer memberCount) {
+        this.memberCount = memberCount;
+    }
+
     public Double getProgress() {
         return progress;
     }
@@ -166,6 +177,7 @@ public class ProjectDto {
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
                 ", progress=" + progress +
+                ", memberCount=" + memberCount +
                 '}';
     }
 } 

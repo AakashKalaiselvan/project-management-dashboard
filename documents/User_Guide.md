@@ -254,29 +254,6 @@ Click **"Create Milestone"** to add it to your project.
 - **Task Statistics**: Number of completed vs. total tasks
 - **Project Timeline**: Start and end dates
 
----
-
-## 🔧 **Settings & Preferences**
-
-### **👤 Profile Management**
-
-#### **Updating Profile**
-1. Click on your **profile picture** in the header
-2. Select **"Profile Settings"**
-3. Update your information:
-   - **Name**: Your full name
-   - **Email**: Your email address
-4. Click **"Save Changes"**
-
-#### **Password Management**
-1. Go to **"Security Settings"**
-2. Enter your current password
-3. Enter your new password
-4. Confirm the new password
-5. Click **"Update Password"**
-
----
-
 ## 🔄 **Navigation**
 
 ### **🧭 Main Navigation**
@@ -293,22 +270,6 @@ Click **"Create Milestone"** to add it to your project.
 - **Milestones**: Manage project milestones
 - **Members**: Manage project team members
 - **Time Tracking**: View time entries and summaries
-
----
-
-## 🔒 **Security & Privacy**
-
-### **🔐 Account Security**
-
-#### **Password Security**
-- **Strong Passwords**: Use complex, unique passwords
-- **Regular Updates**: Change password periodically
-- **Secure Login**: Always log out on shared devices
-
-#### **Data Protection**
-- **Private Projects**: Use appropriate project visibility
-- **Member Permissions**: Carefully manage member access
-- **Secure Sharing**: Share project information securely
 
 ---
 
